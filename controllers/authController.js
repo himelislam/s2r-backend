@@ -22,8 +22,7 @@ const registerUser = asyncHandler(async (req, res) => {
     const user = await User.create({
         name,
         email,
-        password: hashedPassword,
-        userType: 'owner'
+        password: hashedPassword
     })
 
     console.log(user, "asd");
@@ -60,14 +59,17 @@ const loginUser = asyncHandler(async (req, res) => {
 })
 
 const logoutUser = asyncHandler(async (req, res) => {
-    if (res.session) {
-        console.log("user logged out");
-
+    if (req.session) {
         req.session.destroy(function (err) {
-            if (err) throw err;
-            console.log("Something went wrong!");
+            if (err) {
+                console.error("Something went wrong!", err); // Log the actual error
+                return res.status(500).json({ message: "Failed to log out. Please try again later." });
+            }
+            // Session successfully destroyed
             res.redirect("/");
         })
+    } else {
+        res.status(400).json({ message: "Cannot log out, no session found" });
     }
 })
 

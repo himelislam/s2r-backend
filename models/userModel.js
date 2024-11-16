@@ -16,7 +16,8 @@ const userSchema =  new mongoose.Schema({
     },
     userType: {
         type: String,
-        enum: ['owner', 'referrer']
+        enum: ['user', 'owner', 'referrer'],
+        default: 'user'
     },
     userId: {
         type: mongoose.Schema.Types.ObjectId
