@@ -49,6 +49,18 @@ const createBusiness = asyncHandler(async (req, res) => {
     }
 })
 
+const getAllBusiness = asyncHandler(async(req, res) => {
+    try {
+        const businesses = await Business.find(); // Retrieve all documents
+        console.log(businesses);
+        res.status(200).json(businesses);
+    } catch (error) {
+        console.error("Error fetching businesses:", error);
+        res.status(500).json({ error: 'Failed to fetch businesses' });
+    }
+})
+
 module.exports = {
-    createBusiness
+    createBusiness,
+    getAllBusiness
 };

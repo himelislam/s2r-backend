@@ -3,8 +3,8 @@ const User = require('../models/userModel')
 const Referrer = require('../models/referrerModel')
 
 const createReferrer = asyncHandler(async (req, res) => {
-    const { name, email, phone, signature, userType } = req.body;
-    if (!name || !email || !phone || !signature || !userType) {
+    const { name, email, phone, signature, userType, businessId } = req.body;
+    if (!name || !email || !phone || !signature || !userType || !businessId ) {
         res.status(400);
         throw new Error("Please include all fields");
     }
@@ -22,6 +22,8 @@ const createReferrer = asyncHandler(async (req, res) => {
         name,
         email,
         phone,
+        // signature,
+        businessId
     })
 
     if (referrer) {
@@ -33,6 +35,8 @@ const createReferrer = asyncHandler(async (req, res) => {
                 name: referrer.name,
                 email: referrer.email,
                 phone: referrer.phone,
+                signature: referrer.signature,
+                businessId: referrer.businessId
             })
         }else{
             throw new Error("Unable to set business Id on user")
