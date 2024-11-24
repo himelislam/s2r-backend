@@ -9,7 +9,8 @@ const {
   app: { port, cors_origin }
 } = require("./config/env")
 const authRoutes = require('./routes/authRoutes')
-const userRoutes = require('./routes/userRoutes')
+const businessRoutes = require('./routes/businessRoutes');
+const referrerRoutes = require('./routes/referrerRoutes');
 const PORT = port || 8000;
 
 
@@ -34,10 +35,11 @@ app.use(express.urlencoded({ extended: false }));
 
 //Routes
 app.use("/api/auth", authRoutes);
-app.use('/api/user', userRoutes)
+app.use('/api/business', businessRoutes)
+app.use('/api/referrer', referrerRoutes)
 
 app.get("/", (req, res) => {
-  res.status(200).json({ message: "Welcome to the send to refer server" });
+  res.status(200).json({ message: "Welcome to the scan to refer server" });
 });
 
 app.use(errorHandler);
