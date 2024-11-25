@@ -4,7 +4,7 @@ const Referrer = require('../models/referrerModel')
 
 const createReferrer = asyncHandler(async (req, res) => {
     const { name, email, phone, signature, userType, businessId } = req.body;
-    if (!name || !email || !phone || !signature || !userType || !businessId ) {
+    if (!name || !email || !phone || !signature || !userType || !businessId) {
         res.status(400);
         throw new Error("Please include all fields");
     }
@@ -14,7 +14,7 @@ const createReferrer = asyncHandler(async (req, res) => {
         userExists.userType = userType;
         await userExists.save();
         console.log('user type updated');
-    }else{
+    } else {
         throw new Error('Unable to set referrer on user schema')
     }
 
@@ -28,8 +28,8 @@ const createReferrer = asyncHandler(async (req, res) => {
 
     if (referrer) {
         userExists.userId = referrer._id
-        const saved  = await userExists.save();
-        if(saved){
+        const saved = await userExists.save();
+        if (saved) {
             res.status(201).json({
                 _id: referrer._id,
                 name: referrer.name,
@@ -38,7 +38,7 @@ const createReferrer = asyncHandler(async (req, res) => {
                 signature: referrer.signature,
                 businessId: referrer.businessId
             })
-        }else{
+        } else {
             throw new Error("Unable to set business Id on user")
         }
     } else {
@@ -47,6 +47,18 @@ const createReferrer = asyncHandler(async (req, res) => {
     }
 })
 
+const getReferrersByBusinessId = asyncHandler(async (req, res) => {
+    const { businessId } = req.body;
+    try {
+        const referrers = await Referrer.find({ businessId: businessId })
+        res.status(200).json(referrers)
+    } catch (error) {
+        res.status(400);
+        throw new Error("Unable to find referrer by business Id")
+    }
+})
+
 module.exports = {
-    createReferrer
+    createReferrer,
+    getReferrersByBusinessId
 };
