@@ -2,7 +2,8 @@ const asyncHandler = require('express-async-handler');
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const User = require('../models/userModel')
-const { jwt: { secret } } = require('../config/env')
+const nodemailer = require('nodemailer');
+const { jwt: { secret }, mailer: {email, email_password, client_url} } = require('../config/env')
 
 const registerUser = asyncHandler(async (req, res) => {
     const { name, email, password } = req.body;
@@ -75,6 +76,56 @@ const logoutUser = asyncHandler(async (req, res) => {
     }
 })
 
+const forgetPassword = asyncHandler(async (req, res) => {
+    const {email} = req.body;
+    try {
+        const user = await User.findOne({email});
+        if(!user) return res.status(404).json({message: "User not found" });
+
+        const resetToken = jwt.sign({id: user._id}, secret, {expiresIn: '1h'});
+        user.resetToken = resetToken;
+        user.resetTokenExpiration = Date.now() + 3600000;
+        await user.save();
+
+        const resetURL = `${client_url}/reset-password/${resetToken}`;
+        await transporter.sendMail({
+            to: email,
+            subject: 'Reset Password',
+            html: `<p>Click <a href="${resetURL}">here</a> to reset your password.</p>`
+        })
+        res.json({ message: 'Password reset link sent to email.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+})
+
+const resetPassword = asyncHandler(async (req, res) => {
+    const {token} = req.params;
+    const {password} = req.body;
+
+    try {
+        const decoded = jwt.verify(token, secret);
+        const user = await User.findOne({
+            _id: decoded.id,
+            resetToken: token,
+            resetTokenExpiration: { $gt: Date.now() }
+        })
+
+        if(!user) return res.status(400).json({message: 'Invalid or expired token' });
+
+        user.password = password;
+        user.resetToken = undefined;
+        user.resetTokenExpiration = undefined;
+        user.save();
+
+        res.json({ message: 'Password updated successfully.' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Server error' });
+    }
+})
+
 
 const generateToken = (id) => {
     return jwt.sign({ id }, secret, {
@@ -82,8 +133,18 @@ const generateToken = (id) => {
     });
 }
 
+const transporter = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+        user: email,
+        pass: email_password,
+    },
+});
+
 module.exports = {
     registerUser,
     loginUser,
-    logoutUser
+    logoutUser,
+    forgetPassword,
+    resetPassword
 };

@@ -4,8 +4,8 @@ const { mongo: { uri } } = require("./env");
 const connectToDatabase = async () => {
   try {
     const db = await mongoose.connect(uri, {
-    //   useNewUrlParser: true,
-    //   useUnifiedTopology: true,
+      // useNewUrlParser: true,
+      // useUnifiedTopology: true,
     });
     console.log(`MongoDB Connected: ${db.connection.host}`);
   } catch (error) {
