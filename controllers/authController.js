@@ -101,8 +101,8 @@ const forgetPassword = asyncHandler(async (req, res) => {
 })
 
 const resetPassword = asyncHandler(async (req, res) => {
-    const {token} = req.params;
-    const {password} = req.body;
+    // const { token } = req.params;
+    const { password, token } = req.body;
 
     try {
         const decoded = jwt.verify(token, secret);
@@ -114,7 +114,10 @@ const resetPassword = asyncHandler(async (req, res) => {
 
         if(!user) return res.status(400).json({message: 'Invalid or expired token' });
 
-        user.password = password;
+
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+        user.password = hashedPassword;
         user.resetToken = undefined;
         user.resetTokenExpiration = undefined;
         user.save();
