@@ -39,7 +39,7 @@ app.use('/api/business', businessRoutes)
 app.use('/api/referrer', referrerRoutes)
 
 app.get("/", (req, res) => {
-  res.status(200).json({ message: "Welcome to the scan to refer server" });
+  res.status(200).json({ message: "Welcome to the Attach N' Hatch server" });
 });
 
 app.use(errorHandler);
