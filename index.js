@@ -24,7 +24,7 @@ app.use(
 
 // Cors options
 var cors_options = {
-//   origin: cors_origin ? cors_origin : "*",
+  // origin: cors_origin ? cors_origin : "*",
   origin: "*",
   optionsSuccessStatus: 200,
 };

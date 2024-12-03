@@ -99,7 +99,89 @@ const forgetPassword = asyncHandler(async (req, res) => {
         await transporter.sendMail({
             to: email,
             subject: 'Reset Password',
-            html: `<p>Click <a href="${resetURL}">here</a> to reset your password.</p>`
+            // html: `<p>Click <a href="${resetURL}">here</a> to reset your password.</p>`
+            html: `<!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Reset Your Password</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                background-color: #f9f9f9;
+                                margin: 0;
+                                padding: 0;
+                                color: #333;
+                            }
+                            .container {
+                                max-width: 600px;
+                                margin: 30px auto;
+                                background: #ffffff;
+                                padding: 20px;
+                                border: 1px solid #dddddd;
+                                border-radius: 5px;
+                            }
+                            .header {
+                                text-align: center;
+                                padding: 10px 0;
+                            }
+                            .header img {
+                                max-width: 150px;
+                            }
+                            .content {
+                                margin: 20px 0;
+                                text-align: center;
+                            }
+                            .content h1 {
+                                color: #444;
+                                font-size: 24px;
+                            }
+                            .content p {
+                                font-size: 16px;
+                                margin-bottom: 20px;
+                                color: #666;
+                            }
+                            .button-container {
+                                text-align: center;
+                                margin: 20px 0;
+                            }
+                            .button {
+                                background-color: #007BFF;
+                                color: white !important;
+                                padding: 10px 20px;
+                                text-decoration: none;
+                                border-radius: 5px;
+                                font-size: 16px;
+                            }
+                            .footer {
+                                text-align: center;
+                                margin-top: 20px;
+                                font-size: 12px;
+                                color: #999;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <div class="header">
+                                <img src="https://t3.ftcdn.net/jpg/05/16/27/60/360_F_516276029_aMcP4HU81RVrYX8f5qCAOCCuOiCsu5UF.jpg" alt="Attach N' Hatch Logo">
+                            </div>
+                            <div class="content">
+                                <h1>Reset Your Password</h1>
+                                <p>We received a request to reset your password for your Attach N' Hatch account.</p>
+                                <p>If you didn’t request this, please ignore this email. Otherwise, you can reset your password by clicking the button below:</p>
+                                <div class="button-container">
+                                    <a href="${resetURL}" class="button">Reset Password</a>
+                                </div>
+                                <p>This link will expire in 1 hour. If you have any questions, feel free to contact our support team.</p>
+                            </div>
+                            <div class="footer">
+                                <p>&copy; ${new Date().getFullYear()} Attach N' Hatch. All rights reserved.</p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>`
         })
         res.json({ message: 'Password reset link sent to email.' });
     } catch (error) {
