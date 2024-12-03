@@ -1,9 +1,10 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/userModel')
 const Business = require('../models/businessModel')
-
+const { mailer : client_url } = require('../config/env')
 const QRCode = require('qrcode');
 const PDFDocument = require('pdfkit');
+const { v4: uuidv4 } = require("uuid");
 
 const createBusiness = asyncHandler(async (req, res) => {
     const { businessName, businessEmail, name, email, phone, address, userType } = req.body;
@@ -67,8 +68,10 @@ const getAllBusiness = asyncHandler(async (req, res) => {
     }
 })
 
-const createQrCodes = asyncHandler(async (req, res) => {
+const generateQrCodes = asyncHandler(async (req, res) => {
     const {businessId, numberOfCodes } = req.body;
+
+    console.log(businessId, "busness id");
 
     try {
         // Validate the business ID
@@ -94,7 +97,7 @@ const createQrCodes = asyncHandler(async (req, res) => {
         for (let i = 0; i < numberOfCodes; i++) {
             const referrerId = `unassigned-${i}`;
             const uniqueId = uuidv4(); // Generate a unique ID
-            const url = `https://yourdomain.com/r/${businessId}/${referrerId}`;
+            const url = `${client_url}/qr/${businessId}/${referrerId}`;
             const qrCodeBase64 = await QRCode.toDataURL(url); // Generate QR code as Base64
 
             // Add QR code image to the PDF
@@ -128,14 +131,14 @@ const createQrCodes = asyncHandler(async (req, res) => {
     }
 })
 
-const generateQRCode = async (businessId, referrerId) => {
-    const url = `https://yourdomain.com/r/${businessId}/${referrerId}`;
-    const qrCode = await QRCode.toDataURL(url); // Generate QR code as Base64 image
-    return qrCode;
-};
+// const generateQRCode = async (businessId, referrerId) => {
+//     const url = `${client_url}/r/${businessId}/${referrerId}`;
+//     const qrCode = await QRCode.toDataURL(url); // Generate QR code as Base64 image
+//     return qrCode;
+// };
 
 module.exports = {
     createBusiness,
     getAllBusiness,
-    createQrCodes
+    generateQrCodes
 };

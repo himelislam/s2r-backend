@@ -50,5 +50,7 @@ const businessSchema =  new mongoose.Schema({
     }
 })
 
+
+
 module.exports = mongoose.model("business", businessSchema);
-module.exports = mongoose.model("qrcode", qrCodeSchema);
+// module.exports = mongoose.model("qrcode", qrCodeSchema);
