@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/userModel')
 const Business = require('../models/businessModel')
-const { mailer : client_url } = require('../config/env')
+const { mailer : { client_url } } = require('../config/env')
 const QRCode = require('qrcode');
 const PDFDocument = require('pdfkit');
 const { v4: uuidv4 } = require("uuid");
@@ -82,7 +82,7 @@ const generateQrCodes = asyncHandler(async (req, res) => {
 
         // Set the response headers to serve the PDF as a download
         res.setHeader("Content-Type", "application/pdf");
-        res.setHeader("Content-Disposition", "attachment; filename=qr-codes.pdf");
+        res.setHeader("Content-Disposition", "attachment; filename=anh-qr-codes.pdf");
 
         // Create a new PDFDocument instance
         const doc = new PDFDocument();
@@ -98,6 +98,7 @@ const generateQrCodes = asyncHandler(async (req, res) => {
             const referrerId = `unassigned-${i}`;
             const uniqueId = uuidv4(); // Generate a unique ID
             const url = `${client_url}/qr/${businessId}/${referrerId}`;
+            console.log(url, "url");
             const qrCodeBase64 = await QRCode.toDataURL(url); // Generate QR code as Base64
 
             // Add QR code image to the PDF
@@ -106,8 +107,13 @@ const generateQrCodes = asyncHandler(async (req, res) => {
                 align: "center",
                 valign: "center",
             });
-            doc.text(`Business ID: ${businessId}`, { align: "center" });
+            // doc.text(`Business ID: ${businessId}`, { align: "center" });
+            doc.text(`Business Name: ${business.businessName}`, { align: "center" });
             doc.text(`Referrer ID: ${referrerId}`, { align: "center" });
+            doc.moveDown();
+            doc.moveDown();
+            doc.moveDown();
+            doc.moveDown();
             doc.moveDown();
 
             // Prepare QR code details for the database
