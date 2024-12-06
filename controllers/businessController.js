@@ -1,6 +1,10 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/userModel')
 const Business = require('../models/businessModel')
+const { mailer: { client_url } } = require('../config/env')
+const QRCode = require('qrcode');
+const PDFDocument = require('pdfkit');
+const { v4: uuidv4 } = require("uuid");
 
 const createBusiness = asyncHandler(async (req, res) => {
     const { businessName, businessEmail, name, email, phone, address, userType } = req.body;
@@ -64,7 +68,113 @@ const getAllBusiness = asyncHandler(async (req, res) => {
     }
 })
 
+const getBusinessById = asyncHandler(async (req, res) => {
+    const { businessId } = req.body;
+
+    try {
+        const business = await Business.findById(businessId);
+        if (!business) {
+            return res.status(400).json({ message: 'Business Not Found' })
+        }
+        
+        res.status(201).json(business);
+    } catch (error) {
+        console.error("Error getting Business:", error);
+        res.status(500).json({ message: "Failed to get business" });
+    }
+})
+
+const generateQrCodes = asyncHandler(async (req, res) => {
+    const { businessId, numberOfCodes } = req.body;
+
+    console.log(businessId, "busness id");
+
+    try {
+        // Validate the business ID
+        const business = await Business.findById(businessId);
+        if (!business) {
+            return res.status(404).json({ message: "Business not found" });
+        }
+
+        // Set the response headers to serve the PDF as a download
+        res.setHeader("Content-Type", "application/pdf");
+        res.setHeader("Content-Disposition", "attachment; filename=anh-qr-codes.pdf");
+
+        // Create a new PDFDocument instance
+        const doc = new PDFDocument();
+
+        // Pipe the PDF data directly to the response
+        doc.pipe(res);
+
+        // Array to hold new QR codes for bulk insertion
+        const newQrCodes = [];
+
+        // Generate QR codes and add them to the PDF
+        for (let i = 0; i < numberOfCodes; i++) {
+            const referrerId = `unassigned-${i}`;
+            const uniqueId = uuidv4(); // Generate a unique ID
+            const url = `${client_url}/qr/${businessId}/${referrerId}`;
+            console.log(url, "url");
+            const qrCodeBase64 = await QRCode.toDataURL(url); // Generate QR code as Base64
+
+            // Add QR code image to the PDF
+            doc.image(Buffer.from(qrCodeBase64.split(",")[1], "base64"), {
+                fit: [100, 100],
+                align: "center",
+                valign: "center",
+            });
+            // doc.text(`Business ID: ${businessId}`, { align: "center" });
+            doc.text(`Business Name: ${business.businessName}`, { align: "center" });
+            doc.text(`Referrer ID: ${referrerId}`, { align: "center" });
+            doc.moveDown();
+            doc.moveDown();
+            doc.moveDown();
+            doc.moveDown();
+            doc.moveDown();
+
+            // Prepare QR code details for the database
+            newQrCodes.push({
+                id: uniqueId,
+                url,
+                qrCodeBase64: qrCodeBase64,
+                generationDate: new Date(),
+                status: 'unassigned'
+            });
+        }
+
+        // Save the new QR codes to the business document
+        business.qrCodes.push(...newQrCodes);
+        await business.save();
+
+        // Finalize the PDF and end the response
+        doc.end();
+    } catch (error) {
+        console.error("Error generating QR codes:", error);
+        res.status(500).json({ message: "Failed to generate QR codes" });
+    }
+})
+
+// const getQrCodesByBusinessId = asyncHandler(async (req, res) => {
+//     const { businessId } = req.body;
+
+//     try {
+//         const business = await Business.findById(businessId);
+//         if (!business) {
+//             return res.status(404).json({ message: "Business not found" });
+//         }
+//         const qrCodes = business.qrCodes;
+
+//         res.status(201).json(qrCodes);
+//     } catch (error) {
+//         console.error("Error getting QR codes:", error);
+//         res.status(500).json({ message: "Failed to generate QR codes" });
+//     }
+// })
+
 module.exports = {
     createBusiness,
-    getAllBusiness
+    getAllBusiness,
+    generateQrCodes,
+    // getQrCodesByBusinessId,
+    getBusinessById
 };

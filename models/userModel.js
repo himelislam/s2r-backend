@@ -23,10 +23,12 @@ const userSchema =  new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId
     },
     resetToken: { 
-        type: String 
+        type: String,
+        default: null 
     },
     resetTokenExpiration: { 
-        type: Date 
+        type: Date ,
+        default: null
     },
 })
 
