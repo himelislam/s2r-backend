@@ -14,7 +14,8 @@ const referrerSchema =  new mongoose.Schema({
         required: true,
     },
     signature: {
-        type: String
+        type: String,
+        default: null
     },
     businessId: {
         type: mongoose.Schema.Types.ObjectId

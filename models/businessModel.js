@@ -5,17 +5,30 @@ const qrCodeSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    referrerId: {
+        type: mongoose.Schema.Types.ObjectId,
+        default: null
+    },
+    referrerName:{
+        type: String,
+        default: null
+    },
     url: {
         type: String,
         required: true,
     },
-    qrCode: {
+    qrCodeBase64: {
         type: String,   // as base64 image
         required: true,
     },
     generationDate: {
         type: Date,
         default: Date.now,
+    },
+    status: {
+        type: String,
+        enum: ['unassigned', 'assigned'],
+        default: 'unassigned'
     }
 });
 

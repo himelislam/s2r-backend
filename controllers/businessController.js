@@ -1,7 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/userModel')
 const Business = require('../models/businessModel')
-const { mailer : { client_url } } = require('../config/env')
+const { mailer: { client_url } } = require('../config/env')
 const QRCode = require('qrcode');
 const PDFDocument = require('pdfkit');
 const { v4: uuidv4 } = require("uuid");
@@ -68,8 +68,24 @@ const getAllBusiness = asyncHandler(async (req, res) => {
     }
 })
 
+const getBusinessById = asyncHandler(async (req, res) => {
+    const { businessId } = req.body;
+
+    try {
+        const business = await Business.findById(businessId);
+        if (!business) {
+            return res.status(400).json({ message: 'Business Not Found' })
+        }
+        
+        res.status(201).json(business);
+    } catch (error) {
+        console.error("Error getting Business:", error);
+        res.status(500).json({ message: "Failed to get business" });
+    }
+})
+
 const generateQrCodes = asyncHandler(async (req, res) => {
-    const {businessId, numberOfCodes } = req.body;
+    const { businessId, numberOfCodes } = req.body;
 
     console.log(businessId, "busness id");
 
@@ -120,8 +136,9 @@ const generateQrCodes = asyncHandler(async (req, res) => {
             newQrCodes.push({
                 id: uniqueId,
                 url,
-                qrCode: qrCodeBase64,
+                qrCodeBase64: qrCodeBase64,
                 generationDate: new Date(),
+                status: 'unassigned'
             });
         }
 
@@ -137,14 +154,27 @@ const generateQrCodes = asyncHandler(async (req, res) => {
     }
 })
 
-// const generateQRCode = async (businessId, referrerId) => {
-//     const url = `${client_url}/r/${businessId}/${referrerId}`;
-//     const qrCode = await QRCode.toDataURL(url); // Generate QR code as Base64 image
-//     return qrCode;
-// };
+// const getQrCodesByBusinessId = asyncHandler(async (req, res) => {
+//     const { businessId } = req.body;
+
+//     try {
+//         const business = await Business.findById(businessId);
+//         if (!business) {
+//             return res.status(404).json({ message: "Business not found" });
+//         }
+//         const qrCodes = business.qrCodes;
+
+//         res.status(201).json(qrCodes);
+//     } catch (error) {
+//         console.error("Error getting QR codes:", error);
+//         res.status(500).json({ message: "Failed to generate QR codes" });
+//     }
+// })
 
 module.exports = {
     createBusiness,
     getAllBusiness,
-    generateQrCodes
+    generateQrCodes,
+    // getQrCodesByBusinessId,
+    getBusinessById
 };
