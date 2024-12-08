@@ -1,6 +1,9 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/userModel')
 const Referrer = require('../models/referrerModel')
+const Business = require('../models/businessModel')
+const { mailer: { client_url } } = require('../config/env')
+const QRCode = require('qrcode');
 
 const createReferrer = asyncHandler(async (req, res) => {
     const { name, email, phone, signature, userType, businessId } = req.body;
@@ -29,15 +32,66 @@ const createReferrer = asyncHandler(async (req, res) => {
         if (referrer) {
             userExists.userId = referrer._id
             const saved = await userExists.save();
+            const business = await Business.findById(businessId);
+            const existingQrCodesCount = business.qrCodes.length;
+            const uniqueId = existingQrCodesCount + 1 // Generate a unique ID
+            const url = `${client_url}/qr/${businessId}/${referrer?._id}`;
+            const qrCodeBase64 = await QRCode.toDataURL(url); // Generate QR code as Base64
+
             if (saved) {
-                res.status(201).json({
-                    _id: referrer._id,
-                    name: referrer.name,
-                    email: referrer.email,
-                    phone: referrer.phone,
-                    signature: referrer.signature,
-                    businessId: referrer.businessId
-                })
+                const availableQrCode = business.qrCodes.find(qrCode => qrCode.status === 'unassigned')
+                //setting up the qrcodes with the referrer
+                if (business.qrCodes.length == 0 || availableQrCode == undefined) {
+                    // business does not yet have pre generated the qr codes
+                    business.qrCodes.push({
+                        id: uniqueId,
+                        referrerId: referrer?._id,
+                        referrerName: referrer?.name,
+                        url,
+                        qrCodeBase64: qrCodeBase64,
+                        generationDate: new Date(),
+                        status: 'assigned'
+                    });
+
+                    referrer.qrCodeId = uniqueId;
+                    const referrerSaved = await referrer.save();
+                    const newQrCodesSaved = await business.save();
+
+                    if (newQrCodesSaved && referrerSaved) {
+                        res.status(201).json({
+                            _id: referrer._id,
+                            name: referrer.name,
+                            email: referrer.email,
+                            phone: referrer.phone,
+                            signature: referrer.signature,
+                            businessId: referrer.businessId
+                        })
+                    }
+                } else {
+                    // business has generated pre generated qr codes or already have some.
+                    if (availableQrCode) {
+                        availableQrCode.referrerId = referrer?._id,
+                        availableQrCode.referrerName = referrer?.name,
+                        availableQrCode.url = url,
+                        availableQrCode.qrCodeBase64 = qrCodeBase64,
+                        availableQrCode.status = 'assigned'
+
+                        referrer.qrCodeId = uniqueId - 1; // since we are replacing a already generated code
+                        const referrerSaved = await referrer.save();
+                        const newQrCodesSaved = await business.save();
+
+                        if (newQrCodesSaved && referrerSaved) {
+                            res.status(201).json({
+                                _id: referrer._id,
+                                name: referrer.name,
+                                email: referrer.email,
+                                phone: referrer.phone,
+                                signature: referrer.signature,
+                                businessId: referrer.businessId
+                            })
+                        }
+                    }
+                }
             } else {
                 throw new Error("Unable to set business Id on user")
             }
