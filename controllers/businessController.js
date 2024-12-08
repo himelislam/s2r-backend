@@ -57,8 +57,7 @@ const createBusiness = asyncHandler(async (req, res) => {
 
 const getAllBusiness = asyncHandler(async (req, res) => {
     try {
-        const businesses = await Business.find(); // Retrieve all documents
-        console.log(businesses);
+        const businesses = await Business.find();
         res.status(200).json(businesses);
     } catch (error) {
         console.error("Error fetching businesses:", error);
@@ -84,9 +83,6 @@ const getBusinessById = asyncHandler(async (req, res) => {
 
 const generateQrCodes = asyncHandler(async (req, res) => {
     const { businessId, numberOfCodes } = req.body;
-
-    console.log(businessId, "busness id");
-
     try {
         // Validate the business ID
         const business = await Business.findById(businessId);
@@ -102,7 +98,6 @@ const generateQrCodes = asyncHandler(async (req, res) => {
             const referrerId = `unassigned-${existingQrCodesCount + i + 1}`;
             const uniqueId = existingQrCodesCount + i + 1 // Generate a unique ID
             const url = `${client_url}/qr/${businessId}/${referrerId}`;
-            console.log(url, "url");
             const qrCodeBase64 = await QRCode.toDataURL(url); // Generate QR code as Base64
             // Prepare QR code details for the database
             newQrCodes.push({
@@ -132,7 +127,3 @@ module.exports = {
     generateQrCodes,
     getBusinessById
 };
-
-
-
-// error loading businesses status code 400 

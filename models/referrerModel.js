@@ -19,6 +19,10 @@ const referrerSchema =  new mongoose.Schema({
     },
     businessId: {
         type: mongoose.Schema.Types.ObjectId
+    },
+    qrCodeId: {
+        type: Number,
+        default: null
     }
 })
 
