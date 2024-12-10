@@ -111,12 +111,25 @@ const getReferrersByBusinessId = asyncHandler(async (req, res) => {
         const referrers = await Referrer.find({ businessId: businessId })
         res.status(200).json(referrers)
     } catch (error) {
-        res.status(400);
-        throw new Error("Unable to find referrer by business Id")
+        console.error(error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+})
+
+const getReferrerById = asyncHandler(async (req, res) => {
+    const { referrerId } = req.body;
+
+    try {
+        const referrer = await Referrer.findById(referrerId);
+        res.status(200).json(referrer)
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ message: 'Internal Server Error' });
     }
 })
 
 module.exports = {
     createReferrer,
-    getReferrersByBusinessId
+    getReferrersByBusinessId,
+    getReferrerById
 };
