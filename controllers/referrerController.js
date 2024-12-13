@@ -35,14 +35,15 @@ const createReferrer = asyncHandler(async (req, res) => {
             const business = await Business.findById(businessId);
             const existingQrCodesCount = business.qrCodes.length;
             const uniqueId = existingQrCodesCount + 1 // Generate a unique ID
-            const url = `${client_url}/qr/${businessId}/${referrer?._id}`;
+            const url = `${client_url}/qr/${businessId}/${uniqueId}`
             const qrCodeBase64 = await QRCode.toDataURL(url); // Generate QR code as Base64
 
+            //setting up the qrcodes with the referrer
             if (saved) {
                 const availableQrCode = business.qrCodes.find(qrCode => qrCode.status === 'unassigned')
-                //setting up the qrcodes with the referrer
+
+                // business does not have pre generated or un-assigned qr codes 
                 if (business.qrCodes.length == 0 || availableQrCode == undefined) {
-                    // business does not yet have pre generated the qr codes
                     business.qrCodes.push({
                         id: uniqueId,
                         referrerId: referrer?._id,
@@ -72,11 +73,9 @@ const createReferrer = asyncHandler(async (req, res) => {
                     if (availableQrCode) {
                         availableQrCode.referrerId = referrer?._id,
                         availableQrCode.referrerName = referrer?.name,
-                        availableQrCode.url = url,
-                        availableQrCode.qrCodeBase64 = qrCodeBase64,
                         availableQrCode.status = 'assigned'
-
                         referrer.qrCodeId = uniqueId - 1; // since we are replacing a already generated code
+
                         const referrerSaved = await referrer.save();
                         const newQrCodesSaved = await business.save();
 
