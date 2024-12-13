@@ -6,6 +6,6 @@ const { authMiddleware } = require('../middlewares/authMiddleware')
 router.post('/createBusiness', createBusiness);
 router.get('/getAllBusiness', getAllBusiness);
 router.post('/generateQrCodes', generateQrCodes)
-router.post('/getBusinessById', authMiddleware, getBusinessById);
+router.post('/getBusinessById', getBusinessById);
 
 module.exports = router;

@@ -95,9 +95,9 @@ const generateQrCodes = asyncHandler(async (req, res) => {
         // Generate QR codes and add them to the PDF
         for (let i = 0; i < numberOfCodes; i++) {
             // const referrerId = `unassigned-${i}`;
-            const referrerId = `unassigned-${existingQrCodesCount + i + 1}`;
+            // const referrerId = `unassigned-${existingQrCodesCount + i + 1}`;
             const uniqueId = existingQrCodesCount + i + 1 // Generate a unique ID
-            const url = `${client_url}/qr/${businessId}/${referrerId}`;
+            const url = `${client_url}/qr/${businessId}/${uniqueId}`;
             const qrCodeBase64 = await QRCode.toDataURL(url); // Generate QR code as Base64
             // Prepare QR code details for the database
             newQrCodes.push({
