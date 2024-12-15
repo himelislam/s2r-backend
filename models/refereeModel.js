@@ -27,6 +27,11 @@ const refereeSchema = new mongoose.Schema({
     referrerName:{
         type: String,
         required: true
+    },
+    status: {
+        type: String,
+        enum: ['Pending', 'Active'],
+        default: 'Pending'
     }
 });
 

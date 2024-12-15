@@ -1,28 +1,5 @@
 const mongoose = require("mongoose");
 
-
-const refereeSchema = new mongoose.Schema({
-    name: {
-        type: String,
-        required: true,
-    },
-    email: {
-        type: String,
-        default: null
-    },
-    phone:{
-        type: Number,
-        default: null
-    },
-    date: {
-        type: Date,
-        required: true,
-    },
-    businessId: {
-        type: mongoose.Schema.Types.ObjectId
-    }
-});
-
 const referrerSchema =  new mongoose.Schema({
     name: {
         type: String,
@@ -46,10 +23,6 @@ const referrerSchema =  new mongoose.Schema({
     qrCodeId: {
         type: Number,
         default: null
-    },
-    referees: {
-        type: [refereeSchema],
-        default: [],
     }
 })
 

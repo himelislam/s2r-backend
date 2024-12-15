@@ -21,6 +21,7 @@ const createReferee = asyncHandler(async (req, res) => {
             businessId,
             referrerId,
             referrerName: referrer.name,
+            status: 'Active'
         })
 
         if(referee){
@@ -34,10 +35,10 @@ const createReferee = asyncHandler(async (req, res) => {
 })
 
 const getRefereeByReferrerId = asyncHandler( async(req, res) => {
-    const {referredId} = req.body;
+    const {referrerId} = req.body;
 
     try {
-        const referees = await Referee.findById({referredId});
+        const referees = await Referee.find({referrerId: referrerId});
 
         if(referees){
             res.status(201).json(referees);
@@ -50,7 +51,7 @@ const getRefereeByReferrerId = asyncHandler( async(req, res) => {
 
 const getRefereeByBusinessId = asyncHandler( async(req, res) => {
     const { businessId } = req.body;
-    
+
     try {
         const referees = await Referee.find({businessId: businessId});
 
