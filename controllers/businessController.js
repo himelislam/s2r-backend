@@ -1,8 +1,9 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/userModel')
 const Business = require('../models/businessModel')
-const { mailer: { client_url } } = require('../config/env')
 const QRCode = require('qrcode');
+const nodemailer = require('nodemailer');
+const { jwt: { secret }, mailer: { email, email_password, client_url } } = require('../config/env')
 
 const createBusiness = asyncHandler(async (req, res) => {
     const { businessName, businessEmail, name, email, phone, address, userType } = req.body;
@@ -120,10 +121,121 @@ const generateQrCodes = asyncHandler(async (req, res) => {
     }
 })
 
+const inviteReferrer = asyncHandler( async (req, res) => {
+    const {businessId, email, name } = req.body;
+    
+    try {
+        const business = await Business.findById(businessId);
+        const inviteURL = `${client_url}/signup?businessId=${businessId}?email=${email}?name?${name}`;
+
+        await transporter.sendMail({
+            to: email,
+            subject: `Referrer Invitation from ${business?.name}`,
+            // html: `<p>Click <a href="${resetURL}">here</a> to reset your password.</p>`
+            html: `<!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="UTF-8">
+                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                        <title>Referrer Invitation</title>
+                        <style>
+                            body {
+                                font-family: Arial, sans-serif;
+                                background-color: #f9f9f9;
+                                margin: 0;
+                                padding: 0;
+                                color: #333;
+                            }
+                            .container {
+                                max-width: 600px;
+                                margin: 30px auto;
+                                background: #ffffff;
+                                padding: 20px;
+                                border: 1px solid #dddddd;
+                                border-radius: 5px;
+                            }
+                            .header {
+                                text-align: center;
+                                padding: 10px 0;
+                            }
+                            .header img {
+                                max-width: 150px;
+                            }
+                            .content {
+                                margin: 20px 0;
+                                text-align: center;
+                            }
+                            .content h1 {
+                                color: #444;
+                                font-size: 24px;
+                            }
+                            .content p {
+                                font-size: 16px;
+                                margin-bottom: 20px;
+                                color: #666;
+                            }
+                            .button-container {
+                                text-align: center;
+                                margin: 20px 0;
+                            }
+                            .button {
+                                background-color: #007BFF;
+                                color: white !important;
+                                padding: 10px 20px;
+                                text-decoration: none;
+                                border-radius: 5px;
+                                font-size: 16px;
+                            }
+                            .footer {
+                                text-align: center;
+                                margin-top: 20px;
+                                font-size: 12px;
+                                color: #999;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        <div class="container">
+                            <div class="header">
+                                <img src="https://t3.ftcdn.net/jpg/05/16/27/60/360_F_516276029_aMcP4HU81RVrYX8f5qCAOCCuOiCsu5UF.jpg" alt="Attach N' Hatch Logo">
+                            </div>
+                            <div class="content">
+                                <h1>Referrer Invitation</h1>
+                                <p>${business?.name} has invited you to join a referrer</p>
+                                <p>If you didn’t request this, please ignore this email. Otherwise, you can join as a referrer by clicking the button below:</p>
+                                <div class="button-container">
+                                    <a href="${inviteURL}" class="button">Sign Up</a>
+                                </div>
+                                <p>If you have any questions, feel free to contact our support team.</p>
+                            </div>
+                            <div class="footer">
+                                <p>&copy; ${new Date().getFullYear()} Attach N' Hatch. All rights reserved.</p>
+                            </div>
+                        </div>
+                    </body>
+                    </html>`
+        })
+        res.json({ message: 'Invitation mail sent successfully' });
+        
+    } catch (error) {
+        console.error("Error generating QR codes:", error);
+        res.status(500).json({ message: "Failed to generate QR codes" });
+    }
+})
+
+const transporter = nodemailer.createTransport({
+    service: 'Gmail',
+    auth: {
+        user: email,
+        pass: email_password,
+    },
+});
+
 
 module.exports = {
     createBusiness,
     getAllBusiness,
     generateQrCodes,
-    getBusinessById
+    getBusinessById,
+    inviteReferrer
 };
