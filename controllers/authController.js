@@ -9,12 +9,12 @@ const registerUser = asyncHandler(async (req, res) => {
     try {
         const { name, email, password } = req.body;
         if (!name || !email || !password) {
-            res.status(404).json({ message: "Please include all fields" });
+            return res.status(404).json({ message: "Please include all fields" });
         }
 
         const userExists = await User.findOne({ email })
         if (userExists) {
-            res.status(404).json({ message: "User already registered" });
+            return res.status(404).json({ message: "User already registered" });
         }
 
         const salt = await bcrypt.genSalt(10);
@@ -26,7 +26,7 @@ const registerUser = asyncHandler(async (req, res) => {
         })
 
         if (user) {
-            res.status(201).json({
+            return res.status(201).json({
                 _id: user._id,
                 name: user.name,
                 email: user.email,
@@ -49,12 +49,12 @@ const loginUser = asyncHandler(async (req, res) => {
         const user = await User.findOne({ email });
 
         if (!user) {
-            res.status(404).json({ message: "User does not exist" });
+            return res.status(404).json({ message: "User does not exist" });
         }
         else if (user && !(await bcrypt.compare(password, user.password))) {
-            res.status(401).json({ message: "Incorrect password" });
+            return res.status(401).json({ message: "Incorrect password" });
         } else {
-            res.status(200).json({
+            return res.status(200).json({
                 _id: user._id,
                 name: user.name,
                 email: user.email,
@@ -65,7 +65,7 @@ const loginUser = asyncHandler(async (req, res) => {
         }
     } catch (error) {
         console.error(error);
-        res.status(500).json({ message: 'Internal Server error' });
+        return res.status(500).json({ message: 'Internal Server error' });
     }
 })
 

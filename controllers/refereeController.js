@@ -57,8 +57,6 @@ const getRefereeByBusinessId = asyncHandler( async(req, res) => {
 
         if(referees){
             res.status(201).json(referees);
-        }else{
-            console.log(referees, "myb nai");
         }
     } catch (error) {
         console.error(error);
