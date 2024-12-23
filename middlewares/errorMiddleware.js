@@ -1,7 +1,7 @@
 const { app: { environment } } = require('../config/env');
 
 const errorHandler = (err, req, res, next) => {
-    console.log(err);
+    console.error(err);
     const statusCode = res.statusCode ? res.statusCode : 500;
 
     if (err.name = 'ValidationError') {

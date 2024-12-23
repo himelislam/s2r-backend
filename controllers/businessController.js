@@ -1,9 +1,11 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/userModel')
 const Business = require('../models/businessModel')
+const Member = require('../models/memberModel');
 const QRCode = require('qrcode');
 const nodemailer = require('nodemailer');
 const { jwt: { secret }, mailer: { email, email_password, client_url } } = require('../config/env')
+const mongoose = require("mongoose");
 
 const createBusiness = asyncHandler(async (req, res) => {
     const { businessName, businessEmail, name, email, phone, address, userType } = req.body;
@@ -74,7 +76,7 @@ const getBusinessById = asyncHandler(async (req, res) => {
         if (!business) {
             return res.status(400).json({ message: 'Business Not Found' })
         }
-        
+
         res.status(201).json(business);
     } catch (error) {
         console.error("Error getting Business:", error);
@@ -90,7 +92,7 @@ const generateQrCodes = asyncHandler(async (req, res) => {
         if (!business) {
             return res.status(404).json({ message: "Business not found" });
         }
-        const existingQrCodesCount = business.qrCodes.length; 
+        const existingQrCodesCount = business.qrCodes.length;
         const newQrCodes = [];
 
         // Generate QR codes and add them to the PDF
@@ -121,14 +123,26 @@ const generateQrCodes = asyncHandler(async (req, res) => {
     }
 })
 
-const inviteReferrer = asyncHandler( async (req, res) => {
-    const {businessId, email, name } = req.body;
-    
-    try {
-        const business = await Business.findById(businessId);
-        const inviteURL = `${client_url}/signup?businessId=${businessId}?email=${email}?name?${name}`;
+const inviteReferrer = asyncHandler(async (req, res) => {
+    const { businessId, email, name } = req.body;
 
-        await transporter.sendMail({
+    const session = await mongoose.startSession(); // Start a session
+    session.startTransaction()
+
+    try {
+        // creating the member first with session
+        const member = await Member({
+            name,
+            email,
+            businessId,
+            status: 'Invited'
+        })
+        await member.save({ session })
+
+        const business = await Business.findById(businessId).session(session)
+        const inviteURL = `${client_url}/referrer-signup/${businessId}/${email}/${name}`;
+
+        const sent = await transporter.sendMail({
             to: email,
             subject: `Referrer Invitation from ${business?.name}`,
             // html: `<p>Click <a href="${resetURL}">here</a> to reset your password.</p>`
@@ -215,11 +229,22 @@ const inviteReferrer = asyncHandler( async (req, res) => {
                     </body>
                     </html>`
         })
-        res.json({ message: 'Invitation mail sent successfully' });
-        
+
+        if (sent && member) {
+            await session.commitTransaction();
+            session.endSession();
+            res.status(200).json({ message: 'Invitation mail sent successfully' });
+        }
+
     } catch (error) {
-        console.error("Error generating QR codes:", error);
-        res.status(500).json({ message: "Failed to generate QR codes" });
+        await session.abortTransaction();
+        session.endSession();
+        console.error("Failed to send Invitation mail", error);
+        if (error.code === 11000) {
+            res.status(400).json({ message: 'Email already exists.' });
+        } else {
+            res.status(500).json({ message: "Failed to send Invitation mail" });
+        }
     }
 })
 
