@@ -37,8 +37,6 @@ const createReferrer = asyncHandler(async (req, res) => {
 
         await referrer.save({session})
 
-        console.log(invited, "invitation status");
-
         if (referrer) {
             userExists.userId = referrer._id
             const saved = await userExists.save({ session });
