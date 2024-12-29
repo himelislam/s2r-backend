@@ -163,8 +163,36 @@ const getReferrerById = asyncHandler(async (req, res) => {
     }
 })
 
+const getQrCodeByReferrerId = asyncHandler(async (req, res) => {
+    const { referrerId, businessId } = req.body;
+
+    try {
+       // Correct the query to use an object
+       const business = await Business.findOne({ _id: businessId }); // Pass an object as the filter
+
+       if (!business) {
+           return res.status(404).json({ message: 'Business not found' });
+       }
+
+       // Use Array.prototype.find() to locate the matching QR code
+       const qrCode = business.qrCodes.find(qrCode => qrCode.referrerId == referrerId);
+
+       if (!qrCode) {
+           return res.status(404).json({ message: 'QR Code not found' });
+       }
+
+       res.status(200).json(qrCode);
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ message: 'Internal Server Error' });
+        
+    }
+})
+
 module.exports = {
     createReferrer,
     getReferrersByBusinessId,
-    getReferrerById
+    getReferrerById,
+    getQrCodeByReferrerId
 };
