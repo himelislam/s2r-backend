@@ -13,6 +13,7 @@ const businessRoutes = require('./routes/businessRoutes');
 const referrerRoutes = require('./routes/referrerRoutes');
 const refereeRoutes = require('./routes/refereeRoutes')
 const memberRoutes = require('./routes/memberRoutes')
+const campaignRoutes = require('./routes/campaignRoutes')
 const PORT = port || 8000;
 
 
@@ -41,6 +42,8 @@ app.use('/api/business', businessRoutes)
 app.use('/api/referrer', referrerRoutes)
 app.use('/api/referee', refereeRoutes)
 app.use('/api/member', memberRoutes)
+app.use('/api/campaign', campaignRoutes)
+
 
 app.get("/", (req, res) => {
   res.status(200).json({ message: "Welcome to the Attach N' Hatch server" });
