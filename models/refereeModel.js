@@ -28,6 +28,13 @@ const refereeSchema = new mongoose.Schema({
         type: String,
         required: true
     },
+    campaignId: {
+        type: mongoose.Schema.Types.ObjectId
+    },
+    campaignName:{
+        type: String,
+        // required: true
+    },
     status: {
         type: String,
         enum: ['Pending', 'Active'],
