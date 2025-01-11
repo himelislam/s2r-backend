@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const memberSchema =  new mongoose.Schema({
+const memberSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true
@@ -15,7 +15,14 @@ const memberSchema =  new mongoose.Schema({
     },
     businessId: {
         type: mongoose.Schema.Types.ObjectId
-    }
+    },
+    campaignId: {
+        type: mongoose.Schema.Types.ObjectId
+    },
+    campaignName: {
+        type: String,
+        // required: true
+    },
 })
 
 module.exports = mongoose.model("Member", memberSchema);

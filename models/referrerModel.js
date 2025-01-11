@@ -1,6 +1,6 @@
 const mongoose = require("mongoose");
 
-const referrerSchema =  new mongoose.Schema({
+const referrerSchema = new mongoose.Schema({
     name: {
         type: String,
         required: true,
@@ -19,6 +19,13 @@ const referrerSchema =  new mongoose.Schema({
     },
     businessId: {
         type: mongoose.Schema.Types.ObjectId
+    },
+    campaignId: {
+        type: mongoose.Schema.Types.ObjectId
+    },
+    campaignName: {
+        type: String,
+        // required: true
     },
     qrCodeId: {
         type: Number,
