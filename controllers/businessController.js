@@ -118,7 +118,7 @@ const updateProfile = asyncHandler(async (req, res) => {
         const savedUser = await user.save();
 
         if (savedBusiness && savedUser) {
-            return res.status(201).json({ 
+            return res.status(201).json({
                 name: user.name,
                 email: user.email,
             });
@@ -131,6 +131,35 @@ const updateProfile = asyncHandler(async (req, res) => {
         res.status(500).json({ message: "Internal server error" });
     }
 });
+
+const updateBusinessProfile = asyncHandler(async (req, res) => {
+    const { businessId, businessName, businessEmail, address, phone } = req.body;
+
+    try {
+        const business = await Business.findById(businessId);
+        if (!business) {
+            return res.status(404).json({ message: 'Business not found' });
+        }
+
+        // Update only the provided fields
+        if (businessName) business.businessName = businessName;
+        if (businessEmail) business.businessEmail = businessEmail;
+        if (address) business.address = address;
+        if (phone) business.phone = phone;
+
+        // Save the updated business
+        const saved = await business.save();
+
+        if (saved) {
+            return res.status(200).json({ message: 'Business updated successfully' });
+        } else {
+            return res.status(500).json({ message: 'Failed to update business' });
+        }
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+})
 
 
 const generateQrCodes = asyncHandler(async (req, res) => {
@@ -312,5 +341,6 @@ module.exports = {
     generateQrCodes,
     getBusinessById,
     inviteReferrer,
-    updateProfile
+    updateProfile,
+    updateBusinessProfile
 };
