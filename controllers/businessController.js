@@ -84,6 +84,55 @@ const getBusinessById = asyncHandler(async (req, res) => {
     }
 })
 
+const updateProfile = asyncHandler(async (req, res) => {
+    const { name, email, businessId, userId } = req.body;
+
+    try {
+        // Find business by ID
+        const business = await Business.findById(businessId);
+        if (!business) {
+            return res.status(404).json({ message: 'Business not found' });
+        }
+
+        // Find the user by email
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(404).json({ message: 'User not found' });
+        }
+
+        if (email !== user.email) {
+            const emailExists = await User.findOne({ email: email });
+            if (emailExists) {
+                return res.status(400).json({ message: 'Email Already Exists' });
+            }
+        }
+
+        // Update user and business details
+        business.name = name;
+        business.email = email;
+        user.name = name;
+        user.email = email;
+
+        // Save the updates
+        const savedBusiness = await business.save();
+        const savedUser = await user.save();
+
+        if (savedBusiness && savedUser) {
+            return res.status(201).json({ 
+                name: user.name,
+                email: user.email,
+            });
+        } else {
+            return res.status(500).json({ message: "Failed to save updates" });
+        }
+
+    } catch (error) {
+        console.error("Error updating profile:", error);
+        res.status(500).json({ message: "Internal server error" });
+    }
+});
+
+
 const generateQrCodes = asyncHandler(async (req, res) => {
     const { businessId, numberOfCodes } = req.body;
     try {
@@ -262,5 +311,6 @@ module.exports = {
     getAllBusiness,
     generateQrCodes,
     getBusinessById,
-    inviteReferrer
+    inviteReferrer,
+    updateProfile
 };
