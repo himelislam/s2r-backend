@@ -23,10 +23,6 @@ const referrerSchema = new mongoose.Schema({
     campaignId: {
         type: mongoose.Schema.Types.ObjectId
     },
-    campaignName: {
-        type: String,
-        // required: true
-    },
     qrCodeId: {
         type: Number,
         default: null

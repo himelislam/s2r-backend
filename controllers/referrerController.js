@@ -35,7 +35,7 @@ const createReferrer = asyncHandler(async (req, res) => {
             businessId
         })
 
-        await referrer.save({session})
+        await referrer.save({ session })
 
         if (referrer) {
             userExists.userId = referrer._id
@@ -167,32 +167,82 @@ const getQrCodeByReferrerId = asyncHandler(async (req, res) => {
     const { referrerId, businessId } = req.body;
 
     try {
-       // Correct the query to use an object
-       const business = await Business.findOne({ _id: businessId }); // Pass an object as the filter
+        // Correct the query to use an object
+        const business = await Business.findOne({ _id: businessId }); // Pass an object as the filter
 
-       if (!business) {
-           return res.status(404).json({ message: 'Business not found' });
-       }
+        if (!business) {
+            return res.status(404).json({ message: 'Business not found' });
+        }
 
-       // Use Array.prototype.find() to locate the matching QR code
-       const qrCode = business.qrCodes.find(qrCode => qrCode.referrerId == referrerId);
+        // Use Array.prototype.find() to locate the matching QR code
+        const qrCode = business.qrCodes.find(qrCode => qrCode.referrerId == referrerId);
 
-       if (!qrCode) {
-           return res.status(404).json({ message: 'QR Code not found' });
-       }
+        if (!qrCode) {
+            return res.status(404).json({ message: 'QR Code not found' });
+        }
 
-       res.status(200).json(qrCode);
+        res.status(200).json(qrCode);
 
     } catch (error) {
         console.error(error)
         res.status(500).json({ message: 'Internal Server Error' });
-        
+
     }
 })
+
+const updateReferrerProfile = asyncHandler(async (req, res) => {
+    const { referrerId, userId, name, email, phone } = req.body;
+
+    try {
+        const referrer = await Referrer.findById(referrerId);
+        if (!referrer) {
+            return res.status(400).json({ message: 'Referrer not found' })
+        }
+
+        const user = await User.findById(userId);
+        if (!user) {
+            return res.status(400).json({ message: 'User not found' })
+        }
+
+        if (email !== user.email) {
+            const emailExists = await User.findOne({ email: email });
+            if (emailExists) {
+                return res.status(400).json({ message: 'Email Already Exists' });
+            }
+        }
+
+        const updateResult = await Business.updateOne(
+            { "qrCodes.referrerId": referrerId }, // Find the document with matching referrerId in qrCodes
+            { $set: { "qrCodes.$.referrerName": name } } // Update the referrerName field of the matched element
+        );
+
+        if (name) referrer.name = name;
+        if (email) referrer.email = email;
+        if (phone) referrer.phone = phone;
+
+        if (name) user.name = name;
+        if (email) user.email = email;
+
+        const savedReferrer = await referrer.save();
+        const savedUser = await user.save();
+
+        if(savedReferrer && savedUser && updateResult){
+            res.status(201).json({message: 'Referrer updated successfully'})
+        }else{
+            return res.status(500).json({ message: "Failed to save updates" });
+        }
+
+    } catch (error) {
+        console.error(error)
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+})
+
 
 module.exports = {
     createReferrer,
     getReferrersByBusinessId,
     getReferrerById,
-    getQrCodeByReferrerId
+    getQrCodeByReferrerId,
+    updateReferrerProfile
 };
