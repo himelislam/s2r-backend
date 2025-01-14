@@ -18,11 +18,7 @@ const memberSchema = new mongoose.Schema({
     },
     campaignId: {
         type: mongoose.Schema.Types.ObjectId
-    },
-    campaignName: {
-        type: String,
-        // required: true
-    },
+    }
 })
 
 module.exports = mongoose.model("Member", memberSchema);
