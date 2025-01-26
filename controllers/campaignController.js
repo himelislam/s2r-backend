@@ -1,9 +1,10 @@
 const asyncHandler = require('express-async-handler');
 const Campaign = require('../models/campaignModel')
-const { jwt: { secret }, mailer: { email, email_password, client_url } } = require('../config/env')
+const { jwt: { secret } } = require('../config/env');
+const { cloudinary } = require('../helpers/cloudinary.helper');
 
 const createCampaign = asyncHandler(async (req, res) => {
-    const {businessId, campaignName, campaignLanguage} = req.body;
+    const { businessId, campaignName, campaignLanguage } = req.body;
 
     try {
         const campaign = await Campaign.create({
@@ -52,9 +53,24 @@ const updateCampaignActiveStatus = asyncHandler(async (req, res) => {
     }
 })
 
+const uploadCampaignImage = asyncHandler(async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+        // Upload image to Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path);
+        res.json({ url: result.secure_url });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to upload image' });
+    }
+})
+
 
 module.exports = {
     createCampaign,
     getCampaignsByBusinessId,
-    updateCampaignActiveStatus
+    updateCampaignActiveStatus,
+    uploadCampaignImage
 };
