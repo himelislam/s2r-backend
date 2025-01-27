@@ -112,7 +112,7 @@ const updateProfile = asyncHandler(async (req, res) => {
         // Update user and business details
         business.name = name;
         business.email = email;
-        business.url = url;
+
         user.name = name;
         user.email = email;
         user.url = url;
@@ -138,7 +138,7 @@ const updateProfile = asyncHandler(async (req, res) => {
 });
 
 const updateBusinessProfile = asyncHandler(async (req, res) => {
-    const { businessId, businessName, businessEmail, address, phone } = req.body;
+    const { businessId, businessName, businessEmail, address, phone, url } = req.body;
 
     try {
         const business = await Business.findById(businessId);
@@ -151,6 +151,7 @@ const updateBusinessProfile = asyncHandler(async (req, res) => {
         if (businessEmail) business.businessEmail = businessEmail;
         if (address) business.address = address;
         if (phone) business.phone = phone;
+        if (url) business.url = url;
 
         // Save the updated business
         const saved = await business.save();
