@@ -227,7 +227,11 @@ const updateReferrerProfile = asyncHandler(async (req, res) => {
         const savedUser = await user.save();
 
         if(savedReferrer && savedUser && updateResult){
-            res.status(201).json({message: 'Referrer updated successfully'})
+            res.status(201).json({
+                name: referrer.name,
+                email: referrer.email,
+                phone: referrer.phone
+            })
         }else{
             return res.status(500).json({ message: "Failed to save updates" });
         }
