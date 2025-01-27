@@ -45,6 +45,9 @@ const businessSchema =  new mongoose.Schema({
         type: String,
         required: true,
     },
+    url: {
+        type: String,
+    },
     businessEmail: {
         type: String,
         required: true,
