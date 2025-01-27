@@ -3,7 +3,9 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const User = require('../models/userModel')
 const nodemailer = require('nodemailer');
-const { jwt: { secret }, mailer: { email, email_password, client_url } } = require('../config/env')
+const { jwt: { secret }, mailer: { email, email_password, client_url } } = require('../config/env');
+const { cloudinary } = require('../helpers/cloudinary.helper');
+const fs = require('fs');
 
 const registerUser = asyncHandler(async (req, res) => {
     try {
@@ -217,6 +219,7 @@ const resetPassword = asyncHandler(async (req, res) => {
         res.status(500).json({ message: 'Server error' });
     }
 })
+
 const changePassword = asyncHandler(async (req, res) => {
     const { currentPassword, newPassword, userId } = req.body;
 
@@ -256,6 +259,47 @@ const changePassword = asyncHandler(async (req, res) => {
 
 
 
+const uploadProfileImage = asyncHandler(async (req, res) => {
+    try {
+        if (!req.file) {
+            return res.status(400).json({ error: 'No file uploaded' });
+        }
+
+        // Validate file type
+        if (!req.file.mimetype.startsWith('image/')) {
+            return res.status(400).json({ error: 'Only image files are allowed' });
+        }
+
+        // Upload image to Cloudinary
+        const result = await cloudinary.uploader.upload(req.file.path, {
+            folder: 'user',
+            public_id: `user_${Date.now()}`, // Optional: Custom public ID
+        });
+
+        // Delete the temporary file
+        fs.unlinkSync(req.file.path);
+
+        res.json({ url: result.secure_url });
+    } catch (error) {
+        console.error(error);
+
+        // Delete the temporary file in case of an error
+        if (req.file) {
+            fs.unlinkSync(req.file.path);
+        }
+
+        if (error.http_code === 400) {
+            return res.status(400).json({ error: 'Invalid file or upload request' });
+        } else if (error.http_code === 401) {
+            return res.status(500).json({ error: 'Cloudinary authentication failed' });
+        } else {
+            return res.status(500).json({ error: 'Failed to upload image' });
+        }
+    }
+});
+
+
+
 const generateToken = (id) => {
     return jwt.sign({ id }, secret, {
         expiresIn: "10d",
@@ -276,5 +320,6 @@ module.exports = {
     logoutUser,
     forgetPassword,
     resetPassword,
-    changePassword
+    changePassword,
+    uploadProfileImage
 };

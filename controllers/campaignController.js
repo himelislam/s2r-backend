@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const Campaign = require('../models/campaignModel')
 const { jwt: { secret } } = require('../config/env');
 const { cloudinary } = require('../helpers/cloudinary.helper');
+const fs = require('fs');
 
 const createCampaign = asyncHandler(async (req, res) => {
     const { businessId, campaignName, campaignLanguage } = req.body;
@@ -58,11 +59,28 @@ const uploadCampaignImage = asyncHandler(async (req, res) => {
         if (!req.file) {
             return res.status(400).json({ error: 'No file uploaded' });
         }
+
+        // Validate file type
+        if (!req.file.mimetype.startsWith('image/')) {
+            return res.status(400).json({ error: 'Only image files are allowed' });
+        }
+
         // Upload image to Cloudinary
-        const result = await cloudinary.uploader.upload(req.file.path);
+        const result = await cloudinary.uploader.upload(req.file.path, {
+            folder: 'campaign'
+        });
+        
+        // Delete the temporary file
+        fs.unlinkSync(req.file.path);
+
         res.json({ url: result.secure_url });
     } catch (error) {
         console.error(error);
+
+        // Delete the temporary file in case of an error
+        if (req.file) {
+            fs.unlinkSync(req.file.path);
+        }
         res.status(500).json({ error: 'Failed to upload image' });
     }
 })
