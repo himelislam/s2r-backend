@@ -14,9 +14,14 @@ module.exports = {
         uri: process.env.MONGO_URI ||
             `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@s2r-cluster01.qj1lz.mongodb.net/?retryWrites=true&w=majority&appName=S2R-Cluster01`
     },
-    mailer:{
+    mailer: {
         email: process.env.EMAIL,
         email_password: process.env.EMAIL_PASSWORD,
         client_url: process.env.CLIENT_URL
+    },
+    cloudinary: {
+        cloud_name: process.env.CLOUDINARY_NAME,
+        api_key: process.env.CLOUDINARY_API_KEY,
+        api_secret: process.env.CLOUDINARY_API_SECRET,
     }
 };
