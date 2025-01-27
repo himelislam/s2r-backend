@@ -191,7 +191,7 @@ const getQrCodeByReferrerId = asyncHandler(async (req, res) => {
 })
 
 const updateReferrerProfile = asyncHandler(async (req, res) => {
-    const { referrerId, userId, name, email, phone } = req.body;
+    const { referrerId, userId, name, email, phone, url } = req.body;
 
     try {
         const referrer = await Referrer.findById(referrerId);
@@ -219,9 +219,11 @@ const updateReferrerProfile = asyncHandler(async (req, res) => {
         if (name) referrer.name = name;
         if (email) referrer.email = email;
         if (phone) referrer.phone = phone;
+        if (url) referrer.url = url;
 
         if (name) user.name = name;
         if (email) user.email = email;
+        if (url) user.url  = url;
 
         const savedReferrer = await referrer.save();
         const savedUser = await user.save();
@@ -230,7 +232,8 @@ const updateReferrerProfile = asyncHandler(async (req, res) => {
             res.status(201).json({
                 name: referrer.name,
                 email: referrer.email,
-                phone: referrer.phone
+                phone: referrer.phone,
+                url: referrer.url
             })
         }else{
             return res.status(500).json({ message: "Failed to save updates" });
