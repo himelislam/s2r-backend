@@ -9,6 +9,9 @@ const referrerSchema = new mongoose.Schema({
         type: String,
         required: true,
     },
+    url: {
+        type: String,
+    },
     phone: {
         type: String,
         required: true,

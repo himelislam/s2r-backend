@@ -87,7 +87,7 @@ const getBusinessById = asyncHandler(async (req, res) => {
 })
 
 const updateProfile = asyncHandler(async (req, res) => {
-    const { name, email, businessId, userId } = req.body;
+    const { name, email, businessId, userId, url} = req.body;
 
     try {
         // Find business by ID
@@ -112,8 +112,10 @@ const updateProfile = asyncHandler(async (req, res) => {
         // Update user and business details
         business.name = name;
         business.email = email;
+        business.url = url;
         user.name = name;
         user.email = email;
+        user.url = url;
 
         // Save the updates
         const savedBusiness = await business.save();
@@ -123,6 +125,7 @@ const updateProfile = asyncHandler(async (req, res) => {
             return res.status(201).json({
                 name: user.name,
                 email: user.email,
+                url: user.url,
             });
         } else {
             return res.status(500).json({ message: "Failed to save updates" });
