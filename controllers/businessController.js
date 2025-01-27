@@ -332,6 +332,45 @@ const inviteReferrer = asyncHandler(async (req, res) => {
     }
 })
 
+// const uploadProfileImage = asyncHandler(async (req, res) => {
+//     try {
+//         if (!req.file) {
+//             return res.status(400).json({ error: 'No file uploaded' });
+//         }
+
+//         // Validate file type
+//         if (!req.file.mimetype.startsWith('image/')) {
+//             return res.status(400).json({ error: 'Only image files are allowed' });
+//         }
+
+//         // Upload image to Cloudinary
+//         const result = await cloudinary.uploader.upload(req.file.path, {
+//             folder: 'business',
+//             public_id: `user_${Date.now()}`, // Optional: Custom public ID
+//         });
+
+//         // Delete the temporary file
+//         fs.unlinkSync(req.file.path);
+
+//         res.json({ url: result.secure_url });
+//     } catch (error) {
+//         console.error(error);
+
+//         // Delete the temporary file in case of an error
+//         if (req.file) {
+//             fs.unlinkSync(req.file.path);
+//         }
+
+//         if (error.http_code === 400) {
+//             return res.status(400).json({ error: 'Invalid file or upload request' });
+//         } else if (error.http_code === 401) {
+//             return res.status(500).json({ error: 'Cloudinary authentication failed' });
+//         } else {
+//             return res.status(500).json({ error: 'Failed to upload image' });
+//         }
+//     }
+// });
+
 const uploadProfileImage = asyncHandler(async (req, res) => {
     try {
         if (!req.file) {
@@ -343,33 +382,29 @@ const uploadProfileImage = asyncHandler(async (req, res) => {
             return res.status(400).json({ error: 'Only image files are allowed' });
         }
 
-        // Upload image to Cloudinary
-        const result = await cloudinary.uploader.upload(req.file.path, {
-            folder: 'business',
-            public_id: `user_${Date.now()}`, // Optional: Custom public ID
-        });
+        // Upload the file directly from memory to Cloudinary
+        const stream = cloudinary.uploader.upload_stream(
+            {
+                folder: 'business',
+                public_id: `user_${Date.now()}`,
+            },
+            (error, result) => {
+                if (error) {
+                    return res.status(500).json({ error: 'Upload failed' });
+                }
+                res.json({ url: result.secure_url });
+            }
+        );
 
-        // Delete the temporary file
-        fs.unlinkSync(req.file.path);
-
-        res.json({ url: result.secure_url });
+        // Pipe the file buffer into the upload stream
+        stream.end(req.file.buffer);
     } catch (error) {
         console.error(error);
 
-        // Delete the temporary file in case of an error
-        if (req.file) {
-            fs.unlinkSync(req.file.path);
-        }
-
-        if (error.http_code === 400) {
-            return res.status(400).json({ error: 'Invalid file or upload request' });
-        } else if (error.http_code === 401) {
-            return res.status(500).json({ error: 'Cloudinary authentication failed' });
-        } else {
-            return res.status(500).json({ error: 'Failed to upload image' });
-        }
+        return res.status(500).json({ error: 'An error occurred while uploading the image' });
     }
 });
+
 
 const transporter = nodemailer.createTransport({
     service: 'Gmail',
