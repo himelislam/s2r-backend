@@ -65,23 +65,26 @@ const uploadCampaignImage = asyncHandler(async (req, res) => {
             return res.status(400).json({ error: 'Only image files are allowed' });
         }
 
-        // Upload image to Cloudinary
-        const result = await cloudinary.uploader.upload(req.file.path, {
-            folder: 'campaign'
-        });
-        
-        // Delete the temporary file
-        fs.unlinkSync(req.file.path);
+        // Upload the file directly from memory to Cloudinary
+        const stream = cloudinary.uploader.upload_stream(
+            {
+                folder: 'business',
+                public_id: `user_${Date.now()}`,
+            },
+            (error, result) => {
+                if (error) {
+                    return res.status(500).json({ error: 'Upload failed' });
+                }
+                res.json({ url: result.secure_url });
+            }
+        );
 
-        res.json({ url: result.secure_url });
+        // Pipe the file buffer into the upload stream
+        stream.end(req.file.buffer);
     } catch (error) {
         console.error(error);
 
-        // Delete the temporary file in case of an error
-        if (req.file) {
-            fs.unlinkSync(req.file.path);
-        }
-        res.status(500).json({ error: 'Failed to upload image' });
+        return res.status(500).json({ error: 'An error occurred while uploading the image' });
     }
 })
 
