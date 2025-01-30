@@ -101,7 +101,7 @@ const updateCampaignState = asyncHandler(async(req, res) => {
         const saved = await campaign.save();
 
         if(saved){
-            res.status(200).json(campaign)
+            res.status(200).json({message: 'saved successfully'})
         }
 
     } catch (error) {
