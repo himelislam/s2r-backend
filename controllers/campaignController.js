@@ -5,13 +5,14 @@ const { cloudinary } = require('../helpers/cloudinary.helper');
 const fs = require('fs');
 
 const createCampaign = asyncHandler(async (req, res) => {
-    const { businessId, campaignName, campaignLanguage } = req.body;
+    const { businessId, campaignName, campaignLanguage, refereeJSON } = req.body;
 
     try {
         const campaign = await Campaign.create({
             businessId,
             campaignName,
-            campaignLanguage
+            campaignLanguage,
+            refereeJSON
         })
 
         res.status(201).json(campaign);
@@ -57,12 +58,12 @@ const updateCampaignActiveStatus = asyncHandler(async (req, res) => {
 const uploadCampaignImage = asyncHandler(async (req, res) => {
     try {
         if (!req.file) {
-            return res.status(400).json({ error: 'No file uploaded' });
+            return res.status(400).json({ message: 'No file uploaded' });
         }
 
         // Validate file type
         if (!req.file.mimetype.startsWith('image/')) {
-            return res.status(400).json({ error: 'Only image files are allowed' });
+            return res.status(400).json({ message: 'Only image files are allowed' });
         }
 
         // Upload the file directly from memory to Cloudinary
@@ -73,7 +74,7 @@ const uploadCampaignImage = asyncHandler(async (req, res) => {
             },
             (error, result) => {
                 if (error) {
-                    return res.status(500).json({ error: 'Upload failed' });
+                    return res.status(500).json({ message: 'Upload failed' });
                 }
                 res.json({ url: result.secure_url });
             }
@@ -84,7 +85,43 @@ const uploadCampaignImage = asyncHandler(async (req, res) => {
     } catch (error) {
         console.error(error);
 
-        return res.status(500).json({ error: 'An error occurred while uploading the image' });
+        return res.status(500).json({ message: 'An error occurred while uploading the image' });
+    }
+})
+
+const updateCampaignState = asyncHandler(async(req, res) => {
+    const {state, campaignId} = req.body;
+
+    try {
+        const campaign  = await Campaign.findById(campaignId);
+        if(!campaign){
+            return res.status(404).json({message: 'campaign not found'})
+        }
+        campaign.refereeJSON = state
+        const saved = await campaign.save();
+
+        if(saved){
+            res.status(200).json({message: 'saved successfully'})
+        }
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal Server error' });
+    }
+})
+
+const getCampaignState = asyncHandler(async( req, res ) => {
+    const { campaignId } = req.body;
+
+    try {
+        const campaign = await Campaign.findById(campaignId);
+        if(!campaign){
+            return res.status(404).json({message: 'campaign not found'})
+        }
+        res.status(200).json(campaign.refereeJSON);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal Server error' });
     }
 })
 
@@ -93,5 +130,7 @@ module.exports = {
     createCampaign,
     getCampaignsByBusinessId,
     updateCampaignActiveStatus,
-    uploadCampaignImage
+    uploadCampaignImage,
+    updateCampaignState,
+    getCampaignState
 };

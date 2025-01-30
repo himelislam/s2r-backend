@@ -35,11 +35,11 @@ const campaignSchema = new mongoose.Schema({
             default: 0,
         },
     },
-    referrerJson: {
+    referrerJSON: {
         type: String,
         // required: true,
     },
-    refereeJson: {
+    refereeJSON: {
         type: String,
         // required: true,
     },
