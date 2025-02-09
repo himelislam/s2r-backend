@@ -169,7 +169,7 @@ const updateBusinessProfile = asyncHandler(async (req, res) => {
 
 
 const generateQrCodes = asyncHandler(async (req, res) => {
-    const { businessId, numberOfCodes } = req.body;
+    const { businessId, numberOfCodes, campaignId } = req.body;
     try {
         // Validate the business ID
         const business = await Business.findById(businessId);
@@ -184,11 +184,12 @@ const generateQrCodes = asyncHandler(async (req, res) => {
             // const referrerId = `unassigned-${i}`;
             // const referrerId = `unassigned-${existingQrCodesCount + i + 1}`;
             const uniqueId = existingQrCodesCount + i + 1 // Generate a unique ID
-            const url = `${client_url}/qr/${businessId}/${uniqueId}`;
+            const url = `${client_url}/qr/${businessId}/${campaignId}/${uniqueId}`;
             const qrCodeBase64 = await QRCode.toDataURL(url); // Generate QR code as Base64
             // Prepare QR code details for the database
             newQrCodes.push({
                 id: uniqueId,
+                campaignId: campaignId,
                 url,
                 qrCodeBase64: qrCodeBase64,
                 generationDate: new Date(),
@@ -208,7 +209,7 @@ const generateQrCodes = asyncHandler(async (req, res) => {
 })
 
 const inviteReferrer = asyncHandler(async (req, res) => {
-    const { businessId, email, name } = req.body;
+    const { businessId, email, name, campaignId } = req.body;
 
     const session = await mongoose.startSession(); // Start a session
     session.startTransaction()
@@ -219,12 +220,13 @@ const inviteReferrer = asyncHandler(async (req, res) => {
             name,
             email,
             businessId,
+            campaignId,
             status: 'Invited'
         })
         await member.save({ session })
 
         const business = await Business.findById(businessId).session(session)
-        const inviteURL = `${client_url}/referrer-signup/${businessId}/${email}/${name}`;
+        const inviteURL = `${client_url}/referrer-signup/${businessId}/${campaignId}/${email}/${name}`;
 
         const sent = await transporter.sendMail({
             to: email,
@@ -331,45 +333,6 @@ const inviteReferrer = asyncHandler(async (req, res) => {
         }
     }
 })
-
-// const uploadProfileImage = asyncHandler(async (req, res) => {
-//     try {
-//         if (!req.file) {
-//             return res.status(400).json({ error: 'No file uploaded' });
-//         }
-
-//         // Validate file type
-//         if (!req.file.mimetype.startsWith('image/')) {
-//             return res.status(400).json({ error: 'Only image files are allowed' });
-//         }
-
-//         // Upload image to Cloudinary
-//         const result = await cloudinary.uploader.upload(req.file.path, {
-//             folder: 'business',
-//             public_id: `user_${Date.now()}`, // Optional: Custom public ID
-//         });
-
-//         // Delete the temporary file
-//         fs.unlinkSync(req.file.path);
-
-//         res.json({ url: result.secure_url });
-//     } catch (error) {
-//         console.error(error);
-
-//         // Delete the temporary file in case of an error
-//         if (req.file) {
-//             fs.unlinkSync(req.file.path);
-//         }
-
-//         if (error.http_code === 400) {
-//             return res.status(400).json({ error: 'Invalid file or upload request' });
-//         } else if (error.http_code === 401) {
-//             return res.status(500).json({ error: 'Cloudinary authentication failed' });
-//         } else {
-//             return res.status(500).json({ error: 'Failed to upload image' });
-//         }
-//     }
-// });
 
 const uploadProfileImage = asyncHandler(async (req, res) => {
     try {

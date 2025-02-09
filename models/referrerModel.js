@@ -21,10 +21,12 @@ const referrerSchema = new mongoose.Schema({
         default: null
     },
     businessId: {
-        type: mongoose.Schema.Types.ObjectId
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
     },
     campaignId: {
-        type: mongoose.Schema.Types.ObjectId
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
     },
     qrCodeId: {
         type: Number,

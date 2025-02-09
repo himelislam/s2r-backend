@@ -14,10 +14,12 @@ const memberSchema = new mongoose.Schema({
         enum: ['Invited', 'Active']
     },
     businessId: {
-        type: mongoose.Schema.Types.ObjectId
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
     },
     campaignId: {
-        type: mongoose.Schema.Types.ObjectId
+        type: mongoose.Schema.Types.ObjectId,
+        required: true
     }
 })
 
