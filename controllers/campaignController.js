@@ -2,7 +2,6 @@ const asyncHandler = require('express-async-handler');
 const Campaign = require('../models/campaignModel')
 const { jwt: { secret } } = require('../config/env');
 const { cloudinary } = require('../helpers/cloudinary.helper');
-const fs = require('fs');
 
 const createCampaign = asyncHandler(async (req, res) => {
     const { businessId, campaignName, campaignLanguage, refereeJSON } = req.body;

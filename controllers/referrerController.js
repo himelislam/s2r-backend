@@ -8,13 +8,13 @@ const QRCode = require('qrcode');
 const mongoose = require("mongoose");
 
 const createReferrer = asyncHandler(async (req, res) => {
-    const { name, email, phone, signature, userType, businessId, invited } = req.body;
+    const { name, email, phone, signature, userType, businessId, campaignId, invited } = req.body;
 
     const session = await mongoose.startSession(); // Start a session
     session.startTransaction()
 
     try {
-        if (!name || !email || !phone || !signature || !userType || !businessId) {
+        if (!name || !email || !phone || !signature || !userType || !businessId || !campaignId) {
             res.status(400).json({ message: "Please include all fields" });
             throw new Error("Please include all fields");
         }
@@ -32,7 +32,8 @@ const createReferrer = asyncHandler(async (req, res) => {
             email,
             phone,
             // signature,
-            businessId
+            businessId,
+            campaignId
         })
 
         await referrer.save({ session })
@@ -40,20 +41,30 @@ const createReferrer = asyncHandler(async (req, res) => {
         if (referrer) {
             userExists.userId = referrer._id
             const saved = await userExists.save({ session });
+
             const business = await Business.findById(businessId).session(session)
             const existingQrCodesCount = business.qrCodes.length;
             const uniqueId = existingQrCodesCount + 1 // Generate a unique ID
-            const url = `${client_url}/qr/${businessId}/${uniqueId}`
+            const url = `${client_url}/qr/${businessId}/${campaignId}/${uniqueId}`
             const qrCodeBase64 = await QRCode.toDataURL(url) // Generate QR code as Base64
 
             //setting up the qrcodes with the referrer
             if (saved) {
-                const availableQrCode = business.qrCodes.find(qrCode => qrCode.status === 'unassigned')
+                // const availableQrCode = business.qrCodes.find(qrCode => qrCode.status === 'unassigned')
+                const campaignQrCodes = business.qrCodes.filter(
+                    (qrCode) => qrCode.campaignId.toString() === campaignId
+                );
 
+                //Find an unassigned QR code
+                const availableQrCode = campaignQrCodes.find(
+                    (qrCode) => qrCode.status === "unassigned"
+                );
+                
                 if (invited) {
                     const member = await Member.findOne({
                         businessId: businessId,
-                        email: email
+                        email: email,
+                        campaignId: campaignId
                     }).session(session)
 
                     if (member) {
@@ -74,6 +85,7 @@ const createReferrer = asyncHandler(async (req, res) => {
                         id: uniqueId,
                         referrerId: referrer?._id,
                         referrerName: referrer?.name,
+                        campaignId: campaignId,
                         url,
                         qrCodeBase64: qrCodeBase64,
                         generationDate: new Date(),
@@ -93,7 +105,8 @@ const createReferrer = asyncHandler(async (req, res) => {
                             email: referrer.email,
                             phone: referrer.phone,
                             signature: referrer.signature,
-                            businessId: referrer.businessId
+                            businessId: referrer.businessId,
+                            campaignId: referrer.campaignId
                         })
                     }
                 } else {
@@ -101,6 +114,7 @@ const createReferrer = asyncHandler(async (req, res) => {
                     if (availableQrCode) {
                         availableQrCode.referrerId = referrer?._id,
                             availableQrCode.referrerName = referrer?.name,
+                            availableQrCode.campaignId = campaignId,
                             availableQrCode.status = 'assigned'
                         referrer.qrCodeId = uniqueId - 1; // since we are replacing a already generated code
 
@@ -223,19 +237,19 @@ const updateReferrerProfile = asyncHandler(async (req, res) => {
 
         if (name) user.name = name;
         if (email) user.email = email;
-        if (url) user.url  = url;
+        if (url) user.url = url;
 
         const savedReferrer = await referrer.save();
         const savedUser = await user.save();
 
-        if(savedReferrer && savedUser && updateResult){
+        if (savedReferrer && savedUser && updateResult) {
             res.status(201).json({
                 name: referrer.name,
                 email: referrer.email,
                 phone: referrer.phone,
                 url: referrer.url
             })
-        }else{
+        } else {
             return res.status(500).json({ message: "Failed to save updates" });
         }
 
