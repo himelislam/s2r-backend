@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { createCampaign, getCampaignsByBusinessId, updateCampaignActiveStatus, uploadCampaignImage, updateCampaignState, getCampaignState } = require('../controllers/campaignController')
+const { createCampaign, getCampaignsByBusinessId, updateCampaignActiveStatus, uploadCampaignImage, updateCampaignState, getCampaignState, getCampaignById } = require('../controllers/campaignController')
 const { authMiddleware } = require('../middlewares/authMiddleware');
 const { upload } = require('../middlewares/multerMiddleware');
 
@@ -10,6 +10,7 @@ router.post('/updateCampaignActiveStatus', authMiddleware, updateCampaignActiveS
 router.post('/upload', upload.single('image'), uploadCampaignImage)
 router.post('/updateCampaignState', authMiddleware, updateCampaignState )
 router.post('/getCampaignState', authMiddleware, getCampaignState )
+router.post('/getCampaignById', authMiddleware, getCampaignById)
 
 
 module.exports = router;
