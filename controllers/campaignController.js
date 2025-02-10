@@ -21,6 +21,23 @@ const createCampaign = asyncHandler(async (req, res) => {
     }
 })
 
+const getCampaignById = asyncHandler(async (req, res) => {
+    const { campaignId } = req.body;
+
+    try {
+        const campaign = await Campaign.findById(campaignId);
+
+        if (!campaign) {
+            res.status(404).json({ message: 'Campaign not found' });
+        }
+
+        res.status(200).json(campaign);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal Server error' });
+    }
+    
+})
 const getCampaignsByBusinessId = asyncHandler(async (req, res) => {
     const { businessId } = req.body;
 
@@ -131,5 +148,6 @@ module.exports = {
     updateCampaignActiveStatus,
     uploadCampaignImage,
     updateCampaignState,
-    getCampaignState
+    getCampaignState,
+    getCampaignById
 };

@@ -4,7 +4,7 @@ const mongoose = require("mongoose");
 const refereeSchema = new mongoose.Schema({
     name: {
         type: String,
-        required: true,
+        // required: true,
     },
     email: {
         type: String,
@@ -16,7 +16,7 @@ const refereeSchema = new mongoose.Schema({
     },
     date: {
         type: Date,
-        required: true,
+        // required: true,
     },
     businessId: {
         type: mongoose.Schema.Types.ObjectId,
