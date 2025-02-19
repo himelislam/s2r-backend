@@ -303,7 +303,7 @@ const addReferrer = asyncHandler(async (req, res) => {
             availableQrCode.campaignId = campaignId;
             availableQrCode.status = "assigned";
 
-            referrer.qrCodeId = uniqueId - 1;
+            referrer.qrCodeId = uniqueId - 1; // since we are replacing an already generated code
         }
 
         await referrer.save({ session });
