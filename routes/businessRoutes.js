@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
-const { createBusiness , getAllBusiness, generateQrCodes, getBusinessById, inviteReferrer, updateProfile, updateBusinessProfile, uploadProfileImage} = require('../controllers/businessController')
+const { createBusiness , addReferrer, getAllBusiness, generateQrCodes, getBusinessById, inviteReferrer, updateProfile, updateBusinessProfile, uploadProfileImage} = require('../controllers/businessController')
 const { authMiddleware } = require('../middlewares/authMiddleware')
 const {upload} = require('../middlewares/multerMiddleware');
 
 router.post('/createBusiness', createBusiness);
+router.post('/addReferrer', addReferrer);
 router.get('/getAllBusiness', getAllBusiness);
 router.post('/generateQrCodes', generateQrCodes)
 router.post('/getBusinessById', getBusinessById);

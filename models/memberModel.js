@@ -11,7 +11,7 @@ const memberSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Invited', 'Active']
+        enum: ['Invited', 'Active', 'Created']
     },
     businessId: {
         type: mongoose.Schema.Types.ObjectId,
