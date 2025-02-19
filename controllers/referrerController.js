@@ -59,7 +59,7 @@ const createReferrer = asyncHandler(async (req, res) => {
                 const availableQrCode = campaignQrCodes.find(
                     (qrCode) => qrCode.status === "unassigned"
                 );
-                
+
                 if (invited) {
                     const member = await Member.findOne({
                         businessId: businessId,
