@@ -25,8 +25,8 @@ const createReferee = asyncHandler(async (req, res) => {
             status: 'Active'
         })
 
-        if(referee){
-            res.status(201).json({message: 'Sent Successfully'})
+        if (referee) {
+            res.status(201).json({ message: 'Sent Successfully' })
         }
 
     } catch (error) {
@@ -35,13 +35,13 @@ const createReferee = asyncHandler(async (req, res) => {
     }
 })
 
-const getRefereeByReferrerId = asyncHandler( async(req, res) => {
-    const {referrerId} = req.body;
+const getRefereeByReferrerId = asyncHandler(async (req, res) => {
+    const { referrerId } = req.body;
 
     try {
-        const referees = await Referee.find({referrerId: referrerId});
+        const referees = await Referee.find({ referrerId: referrerId });
 
-        if(referees){
+        if (referees) {
             res.status(201).json(referees);
         }
     } catch (error) {
@@ -50,13 +50,13 @@ const getRefereeByReferrerId = asyncHandler( async(req, res) => {
     }
 })
 
-const getRefereeByBusinessId = asyncHandler( async(req, res) => {
+const getRefereeByBusinessId = asyncHandler(async (req, res) => {
     const { businessId } = req.body;
 
     try {
-        const referees = await Referee.find({businessId: businessId});
+        const referees = await Referee.find({ businessId: businessId });
 
-        if(referees){
+        if (referees) {
             res.status(201).json(referees);
         }
     } catch (error) {
@@ -64,9 +64,24 @@ const getRefereeByBusinessId = asyncHandler( async(req, res) => {
         res.status(500).json({ message: 'Internal Server Error' });
     }
 })
+
+const getRefereeList = asyncHandler(async (req, res) => {
+    const { refereerId } = req.body;
+
+    try {
+        const referees = await Referee.find({ referrerId: refereerId });
+        if (referees) {
+            res.status(201).json(referees);
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal Server Error' });
+    }
+});
 
 module.exports = {
     createReferee,
     getRefereeByReferrerId,
-    getRefereeByBusinessId
+    getRefereeByBusinessId,
+    getRefereeList
 };
