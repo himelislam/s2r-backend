@@ -61,189 +61,6 @@ const createBusiness = asyncHandler(async (req, res) => {
     }
 })
 
-// add referrer to business from the business side
-// const addReferrer = asyncHandler(async (req, res) => {
-//     const { name, email, phone, signature, userType, businessId, campaignId, invited } = req.body;
-
-//     const session = await mongoose.startSession(); // Start a session
-//     session.startTransaction()
-
-//     try {
-//         if (!name || !email || !phone || !userType || !businessId || !campaignId) {
-//             res.status(400).json({ message: "Please include all fields" });
-//             throw new Error("Please include all fields");
-//         }
-
-//         const user = await User.create({
-//             name,
-//             email
-//         })
-
-//         if (user) {
-//             user.userType = userType;
-//             await user.save({ session });
-//         } else {
-//             throw new Error('Unable to set referrer on user schema')
-//         }
-
-//         const referrer = await Referrer({
-//             name,
-//             email,
-//             phone,
-//             // signature,
-//             businessId,
-//             campaignId
-//         })
-
-//         await referrer.save({ session })
-
-//         if (referrer) {
-//             user.userId = referrer._id
-//             const saved = await user.save({ session });
-
-//             const business = await Business.findById(businessId).session(session)
-//             const existingQrCodesCount = business.qrCodes.length;
-//             const uniqueId = existingQrCodesCount + 1 // Generate a unique ID
-//             const url = `${client_url}/qr/${businessId}/${campaignId}/${uniqueId}`
-//             const qrCodeBase64 = await QRCode.toDataURL(url) // Generate QR code as Base64
-
-//             //setting up the qrcodes with the referrer
-//             if (saved) {
-//                 // const availableQrCode = business.qrCodes.find(qrCode => qrCode.status === 'unassigned')
-//                 const campaignQrCodes = business.qrCodes.filter(
-//                     (qrCode) => qrCode.campaignId.toString() === campaignId
-//                 );
-
-//                 //Find an unassigned QR code
-//                 const availableQrCode = campaignQrCodes.find(
-//                     (qrCode) => qrCode.status === "unassigned"
-//                 );
-
-//                 // business does not have pre generated or un-assigned qr codes 
-//                 if (business.qrCodes.length == 0 || availableQrCode == undefined) {
-//                     business.qrCodes.push({
-//                         id: uniqueId,
-//                         referrerId: referrer?._id,
-//                         referrerName: referrer?.name,
-//                         campaignId: campaignId,
-//                         url,
-//                         qrCodeBase64: qrCodeBase64,
-//                         generationDate: new Date(),
-//                         status: 'assigned'
-//                     });
-
-//                     referrer.qrCodeId = uniqueId;
-//                     const referrerSaved = await referrer.save({ session });
-//                     const newQrCodesSaved = await business.save({ session });
-
-//                     if (newQrCodesSaved && referrerSaved) {
-//                         // Send welcome email to the referrer and create member lists
-//                         const member = await Member({
-//                             name,
-//                             email,
-//                             businessId,
-//                             campaignId,
-//                             status: 'Invited'
-//                         })
-
-//                         const memberSaved = await member.save({ session })
-//                         const mailSent = await sendReferrerWelcomeEmail({
-//                             body: {
-//                                 businessId,
-//                                 email,
-//                                 name,
-//                                 campaignId,
-//                                 referrerId: referrer._id,
-//                                 session,
-//                             },
-//                         });
-
-
-//                         if (mailSent && memberSaved) {
-//                             await session.commitTransaction();
-//                             session.endSession();
-//                             res.status(201).json({
-//                                 _id: referrer._id,
-//                                 name: referrer.name,
-//                                 email: referrer.email,
-//                                 phone: referrer.phone,
-//                                 signature: referrer.signature,
-//                                 businessId: referrer.businessId,
-//                                 campaignId: referrer.campaignId
-//                             })
-//                         }
-//                     }
-//                 } else {
-//                     // business has generated pre generated qr codes or already have some.
-//                     if (availableQrCode) {
-//                         availableQrCode.referrerId = referrer?._id,
-//                             availableQrCode.referrerName = referrer?.name,
-//                             availableQrCode.campaignId = campaignId,
-//                             availableQrCode.status = 'assigned'
-//                         referrer.qrCodeId = uniqueId - 1; // since we are replacing a already generated code
-
-//                         const referrerSaved = await referrer.save({ session });
-//                         const newQrCodesSaved = await business.save({ session });
-
-//                         if (newQrCodesSaved && referrerSaved) {
-//                             // Send welcome email to the referrer and create member lists
-//                             const member = await Member({
-//                                 name,
-//                                 email,
-//                                 businessId,
-//                                 campaignId,
-//                                 status: 'Created'
-//                             })
-
-//                             const memberSaved = await member.save({ session })
-//                             const mailSent = await sendReferrerWelcomeEmail({
-//                                 body: {
-//                                     businessId,
-//                                     email,
-//                                     name,
-//                                     campaignId,
-//                                     referrerId: referrer._id,
-//                                     session
-//                                 },
-//                             });
-
-//                             if (mailSent && memberSaved) {
-//                                 await session.commitTransaction();
-//                                 session.endSession();
-//                                 res.status(201).json({
-//                                     _id: referrer._id,
-//                                     name: referrer.name,
-//                                     email: referrer.email,
-//                                     phone: referrer.phone,
-//                                     signature: referrer.signature,
-//                                     businessId: referrer.businessId,
-//                                 });
-//                             } else {
-//                                 throw new Error('Failed to send welcome email');
-//                             }
-//                         }
-//                     }
-//                 }
-//             } else {
-//                 await session.abortTransaction();
-//                 session.endSession();
-//                 throw new Error("Unable to set business Id on user")
-//             }
-//         } else {
-//             await session.abortTransaction();
-//             session.endSession();
-//             res.status(400).json({ message: "Unable to create referrer" });
-//             throw new Error("Invalid credentials")
-//         }
-//     } catch (error) {
-//         await session.abortTransaction();
-//         session.endSession();
-//         console.error(error);
-//         res.status(500).json({ message: 'Internal Server Error' });
-//     }
-// })
-
-
 const addReferrer = asyncHandler(async (req, res) => {
     const { name, email, phone, userType, businessId, campaignId } = req.body;
 
@@ -309,12 +126,19 @@ const addReferrer = asyncHandler(async (req, res) => {
         await referrer.save({ session });
         await business.save({ session });
 
+        const campaign = await Campaign.findById(campaignId);
+        if (!campaign) {
+            return res.status(404).json({ message: "Campaign not found" });
+        }
+
         const member = new Member({
             name,
             email,
             businessId,
             campaignId,
-            status: "Invited"
+            campaignName: campaign.campaignName,
+            qrCode: availableQrCode || { id: uniqueId, qrCodeBase64 },
+            status: "Created"
         });
         await member.save({ session });
 
@@ -328,15 +152,16 @@ const addReferrer = asyncHandler(async (req, res) => {
 
         if (!mailSent) {
             console.error("Warning: Email failed to send");
+            const retryMailSent = await sendReferrerWelcomeEmail({
+                body: { businessId, email, name, campaignId, referrerId: referrer._id },
+            });
+            if (!retryMailSent) {
+                console.error("Email failed after retry");
+            }
         }
 
         return res.status(201).json({
-            _id: referrer._id,
-            name: referrer.name,
-            email: referrer.email,
-            phone: referrer.phone,
-            businessId: referrer.businessId,
-            campaignId: referrer.campaignId,
+            message: "Referrer added successfully",
         });
 
     } catch (error) {
@@ -623,147 +448,9 @@ const inviteReferrer = asyncHandler(async (req, res) => {
     }
 })
 
-// const sendReferrerWelcomeEmail = asyncHandler(async (req, res) => {
-//     const { businessId, email, name, campaignId, referrerId, session } = req.body;
-
-//     // const session = await mongoose.startSession(); // Start a session
-//     // session.startTransaction()
-
-//     try {
-
-//         const business = await Business.findById(businessId).session(session)
-//         const campaign = await Campaign.findById(campaignId).session(session)
-//         // const qrCode = business.qrCodes.find(qrCode => qrCode.referrerId.toString() == referrerId.toString())
-//         const qrCode = await business.qrCodes.find(qrCode => {
-//             if (!qrCode.referrerId) {
-//                 console.log(qrCode.referrerId, "referrerid");
-//                 throw new Error('QR Code referrerId is null or undefined');
-//             }
-//             return qrCode.referrerId.toString() === referrerId.toString();
-//         });
-//         const refereeListURL = `${client_url}/referee-list/${businessId}/${referrerId}/${campaignId}/${email}`;
-//         const signupURL = `${client_url}/referee-signup/${businessId}/${referrerId}/${campaignId}/${email}`;
-
-//         const sent = await transporter.sendMail({
-//             to: email,
-//             subject: `Joined on campaing from ${business?.name}`,
-//             // html: `<p>Click <a href="${resetURL}">here</a> to reset your password.</p>`
-//             html: `<!DOCTYPE html>
-//                     <html>
-//                     <head>
-//                         <meta charset="UTF-8">
-//                         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-//                         <title>Account Created Successfully</title>
-//                         <style>
-//                             body {
-//                                 font-family: Arial, sans-serif;
-//                                 background-color: #f9f9f9;
-//                                 margin: 0;
-//                                 padding: 0;
-//                                 color: #333;
-//                             }
-//                             .container {
-//                                 max-width: 600px;
-//                                 margin: 30px auto;
-//                                 background: #ffffff;
-//                                 padding: 20px;
-//                                 border: 1px solid #dddddd;
-//                                 border-radius: 5px;
-//                             }
-//                             .header {
-//                                 text-align: center;
-//                                 padding: 10px 0;
-//                             }
-//                             .header img {
-//                                 max-width: 150px;
-//                             }
-//                             .content {
-//                                 margin: 20px 0;
-//                                 text-align: center;
-//                             }
-//                             .content h1 {
-//                                 color: #444;
-//                                 font-size: 24px;
-//                             }
-//                             .content p {
-//                                 font-size: 16px;
-//                                 margin-bottom: 20px;
-//                                 color: #666;
-//                             }
-//                             .button-container {
-//                                 text-align: center;
-//                                 margin: 20px 0;
-//                             }
-//                             .button {
-//                                 background-color: #007BFF;
-//                                 color: white !important;
-//                                 padding: 10px 20px;
-//                                 text-decoration: none;
-//                                 border-radius: 5px;
-//                                 font-size: 16px;
-//                             }
-//                             .footer {
-//                                 text-align: center;
-//                                 margin-top: 20px;
-//                                 font-size: 12px;
-//                                 color: #999;
-//                             }
-//                         </style>
-//                     </head>
-//                     <body>
-//                         <div class="container">
-//                             <div class="header">
-//                                 <img src="https://t3.ftcdn.net/jpg/05/16/27/60/360_F_516276029_aMcP4HU81RVrYX8f5qCAOCCuOiCsu5UF.jpg" alt="Attach N' Hatch Logo">
-//                             </div>
-//                             <div class="content">
-//                                 <h1>You have successfully joined as a referrer on ${campaign?.campaignName}</h1>
-//                                 <p>${business?.name} has invited you to join a referrer</p>
-//                                 <p>To sign up on the dashboard; please click the link below to set the password:</p>
-//                                 <div class="button-container">
-//                                     <a href="${signupURL}" class="button">Sign Up</a>
-//                                 </div>
-
-//                                 <div class="content">
-//                                     <p>Here is your QR code for the campaign:</p>
-//                                     <img src="${qrCode?.qrCodeBase64}" alt="QR Code" />
-//                                 </div>
-
-//                                 <p>You can check out the referee list from the link below:</p>
-//                                 <div class="button-container">
-//                                     <a href="${refereeListURL}" class="button">Sign Up</a>
-//                                 </div>
-                                
-//                                 <p>If you have any questions, feel free to contact our support team.</p>
-//                             </div>
-//                             <div class="footer">
-//                                 <p>&copy; ${new Date().getFullYear()} Attach N' Hatch. All rights reserved.</p>
-//                             </div>
-//                         </div>
-//                     </body>
-//                     </html>`
-//         })
-
-//         if (sent) {
-//             await session.commitTransaction();
-//             session.endSession();
-//             res.status(200).json({ message: 'Invitation mail sent successfully' });
-//         }
-
-//     } catch (error) {
-//         await session.abortTransaction();
-//         session.endSession();
-//         console.error("Failed to send Invitation mail", error);
-//         if (error.code === 11000) {
-//             res.status(400).json({ message: 'Email already exists.' });
-//         } else {
-//             res.status(500).json({ message: "Failed to send Invitation mail" });
-//         }
-//     }
-// })
-
 const sendReferrerWelcomeEmail = asyncHandler(async (req, res) => {
     const { businessId, email, name, campaignId, referrerId } = req.body;
-    
+
     const session = await mongoose.startSession(); // Start a session
     session.startTransaction();
 
@@ -782,7 +469,7 @@ const sendReferrerWelcomeEmail = asyncHandler(async (req, res) => {
             throw new Error("QR Code not found for the given referrer.");
         }
 
-        const refereeListURL = `${client_url}/referee-list/${businessId}/${referrerId}/${campaignId}/${email}`;
+        const refereeListURL = `${client_url}/referee-list/${referrerId}`;
         const signupURL = `${client_url}/referee-signup/${businessId}/${referrerId}/${campaignId}/${email}`;
 
         const sent = await transporter.sendMail({
@@ -887,22 +574,14 @@ const sendReferrerWelcomeEmail = asyncHandler(async (req, res) => {
             await session.commitTransaction(); // Commit transaction
             session.endSession(); // End session after committing
             // return res.status(200).json({ message: 'Invitation mail sent successfully' });
-            return true; 
+            return true;
         }
 
         throw new Error("Failed to send email.");
     } catch (error) {
-        // await session.abortTransaction(); // Abort transaction on error
-        session.endSession(); // End session after aborting
-
+        session.endSession();
         console.error("Failed to send invitation mail", error);
-
         return false
-        // if (error.code === 11000) {
-        //     return res.status(400).json({ message: 'Email already exists.' });
-        // } else {
-        //     return res.status(500).json({ message: "Failed to send invitation mail" });
-        // }
     }
 });
 

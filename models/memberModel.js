@@ -20,7 +20,15 @@ const memberSchema = new mongoose.Schema({
     campaignId: {
         type: mongoose.Schema.Types.ObjectId,
         required: true
-    }
+    },
+    qrCode:{
+        type: Object,
+        required: false
+    },
+    campaignName: {
+        type: String,
+        required: false
+    },
 })
 
 module.exports = mongoose.model("Member", memberSchema);
