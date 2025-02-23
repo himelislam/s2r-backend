@@ -470,7 +470,7 @@ const sendReferrerWelcomeEmail = asyncHandler(async (req, res) => {
         }
 
         const refereeListURL = `${client_url}/referee-list/${referrerId}`;
-        const signupURL = `${client_url}/referee-signup/${businessId}/${referrerId}/${campaignId}/${email}`;
+        const signupURL = `${client_url}/referrer-setup-pass/${businessId}/${referrerId}/${email}`;
 
         const sent = await transporter.sendMail({
             to: email,
