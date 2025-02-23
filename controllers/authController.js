@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const User = require('../models/userModel')
+const Business = require('../models/businessModel')
 const nodemailer = require('nodemailer');
 const { jwt: { secret }, mailer: { email, email_password, client_url } } = require('../config/env');
 const { cloudinary } = require('../helpers/cloudinary.helper');
@@ -257,46 +258,78 @@ const changePassword = asyncHandler(async (req, res) => {
     }
 });
 
+// const referrerSetupPass = asyncHandler(async (req, res) => {
+//     const { businessId ,referrerId, email, password } = req.body;
+//     const business = await Business.findById(businessId)
 
-
-// const uploadProfileImage = asyncHandler(async (req, res) => {
+//     // Hash new password
+//     const salt = await bcrypt.genSalt(10);
+//     const hashedPassword = await bcrypt.hash(password, salt);
+    
 //     try {
-//         if (!req.file) {
-//             return res.status(400).json({ error: 'No file uploaded' });
+//         const user = await User.find({ email: email, userId: referrerId });
+//         if (user.password) {
+//             return res.status(404).json({ message: "User already registered" });
 //         }
+//         user.password = hashedPassword;
+//         user.save();
 
-//         // Validate file type
-//         if (!req.file.mimetype.startsWith('image/')) {
-//             return res.status(400).json({ error: 'Only image files are allowed' });
-//         }
-
-//         // Upload image to Cloudinary
-//         const result = await cloudinary.uploader.upload(req.file.path, {
-//             folder: 'user',
-//             public_id: `user_${Date.now()}`, // Optional: Custom public ID
+//         res.status(201).json({
+//             _id: user._id,
+//             name: user.name,
+//             email: user.email,
+//             userType: user.userType,
+//             userId: user.userId,
+//             token: generateToken(user._id),
+//             businessId: business._id,
 //         });
-
-//         // Delete the temporary file
-//         fs.unlinkSync(req.file.path);
-
-//         res.json({ url: result.secure_url });
+        
 //     } catch (error) {
 //         console.error(error);
-
-//         // Delete the temporary file in case of an error
-//         if (req.file) {
-//             fs.unlinkSync(req.file.path);
-//         }
-
-//         if (error.http_code === 400) {
-//             return res.status(400).json({ error: 'Invalid file or upload request' });
-//         } else if (error.http_code === 401) {
-//             return res.status(500).json({ error: 'Cloudinary authentication failed' });
-//         } else {
-//             return res.status(500).json({ error: 'Failed to upload image' });
-//         }
+//         res.status(500).json({ message: 'Internal Server error' });
 //     }
-// });
+// })
+
+const referrerSetupPass = asyncHandler(async (req, res) => {
+    const { businessId, referrerId, email, password } = req.body;
+
+    try {
+        const business = await Business.findById(businessId);
+        if (!business) {
+            return res.status(404).json({ message: "Business not found" });
+        }
+
+        // Hash new password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        const user = await User.findOne({ email: email, userId: referrerId });
+        if (!user) {
+            return res.status(404).json({ message: "User not found" });
+        }
+        if (user.password) {
+            return res.status(400).json({ message: "User already registered" });
+        }
+
+        user.password = hashedPassword;
+        await user.save();
+
+        res.status(201).json({
+            _id: user._id,
+            name: user.name,
+            email: user.email,
+            userType: user.userType,
+            userId: user.userId,
+            token: generateToken(user._id),
+            businessId: business._id,
+        });
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal Server error' });
+    }
+});
+
 
 const uploadProfileImage = asyncHandler(async (req, res) => {
     try {
@@ -355,5 +388,6 @@ module.exports = {
     forgetPassword,
     resetPassword,
     changePassword,
-    uploadProfileImage
+    uploadProfileImage,
+    referrerSetupPass
 };
