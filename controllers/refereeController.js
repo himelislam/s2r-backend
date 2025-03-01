@@ -6,12 +6,16 @@ const { mailer: { client_url } } = require('../config/env')
 const createReferee = asyncHandler(async (req, res) => {
     const { name, email, phone, date, businessId, campaignId, referrerId } = req.body;
     try {
-        // if (!name || !email || !phone || !date || !businessId || !referrerId ) {
-        //     res.status(400).json({ message: "Please include all fields" });
-        //     throw new Error("Please include all fields");
-        // }
+        if (!name || !email || !businessId || !referrerId ) {
+            res.status(400).json({ message: "Please include all fields" });
+            throw new Error("Please include all fields");
+        }
 
         const referrer = await Referrer.findById(referrerId);
+
+        if (!referrer) {
+            return res.status(404).json({ message: "Referrer not found" });
+        }
 
         const referee = await Referee.create({
             name,
