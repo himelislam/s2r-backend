@@ -108,7 +108,7 @@ const SettingsSchema = new Schema({
     // Duration and Language
     startDate: {
       type: Date,
-      required: true
+      required: false
     },
     endDate: {
       type: Date,
