@@ -1,80 +1,7 @@
-// const mongoose = require("mongoose");
-
-// const campaignSchema = new mongoose.Schema({
-//     businessId: {
-//         type: mongoose.Schema.Types.ObjectId,
-//         required: true
-//     },
-//     campaignName: {
-//         type: String,
-//         required: true,
-//     },
-//     campaignLanguage: {
-//         type: String,
-//         required: true,
-//     },
-//     active: {
-//         type: Boolean,
-//         default: true,
-//     },
-//     stats: {
-//         totalReach: {
-//             type: Number,
-//             default: 0,
-//         },
-//         totalUsers: {
-//             type: Number,
-//             default: 0,
-//         },
-//         totalReferrals: {
-//             type: Number,
-//             default: 0,
-//         },
-//         convertedReferrals: {
-//             type: Number,
-//             default: 0,
-//         },
-//     },
-//     referrerJSON: {
-//         type: String,
-//         // required: true,
-//     },
-//     refereeJSON: {
-//         type: String,
-//         // required: true,
-//     },
-//     settings: {
-//         type: Array,
-//         // required: true, 
-//     },
-//     reward: {
-//         rewardType: {
-//             type: String,
-//             enum: ['COUPON', 'GIFTCARD', 'CASH'],
-//         },
-//         code: {
-//             type: String,
-//         },
-//         codes: {
-//             type: Array,
-//         },
-//         amount: {
-//             type: Number,
-//         },
-//         currency: {
-//             type: String,
-//         },
-//     },
-// })
-
-// module.exports = mongoose.model("Campaign", campaignSchema);
-
-
 const mongoose = require("mongoose");
-const { Schema } = mongoose;
 
 // Define nested schemas for better structure
-const StatsSchema = new Schema({
+const StatsSchema = new mongoose.Schema({
   totalReach: {
     type: Number,
     default: 0
@@ -93,7 +20,7 @@ const StatsSchema = new Schema({
   }
 });
 
-const RewardSchema = new Schema({
+const RewardSchema = new mongoose.Schema({
   rewardType: {
     type: String,
     enum: ['COUPON', 'GIFTCARD', 'CASH']
@@ -104,7 +31,7 @@ const RewardSchema = new Schema({
   currency: String
 });
 
-const SettingsSchema = new Schema({
+const SettingsSchema = new mongoose.Schema({
     // Duration and Language
     startDate: {
       type: Date,
@@ -192,9 +119,9 @@ const SettingsSchema = new Schema({
   });
 
 // Main schema
-const CampaignSchema = new Schema({
+const CampaignSchema = new mongoose.Schema({
   businessId: {
-    type: Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId,
     ref: 'Business', // Added ref for proper relation
     required: true
   },
