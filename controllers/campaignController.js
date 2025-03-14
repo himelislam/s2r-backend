@@ -141,6 +141,47 @@ const getCampaignState = asyncHandler(async( req, res ) => {
     }
 })
 
+const updateCampaignReward = asyncHandler(async(req, res) => {
+    const {campaignId, reward} = req.body;
+
+    try {
+        const campaign = await Campaign.findById(campaignId);
+        if(!campaign){
+            return res.status(404).json({message: 'campaign not found'})
+        }
+        campaign.reward = reward;
+        const saved = await campaign.save();
+
+        if(saved){
+            res.status(200).json({message: 'saved successfully'})
+        }
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal Server error' });
+    }
+})
+
+const updateCampaignSettings = asyncHandler(async(req, res) => {
+    const {campaignId, settings} = req.body;
+
+    try {
+        const campaign = await Campaign.findById(campaignId);
+        if(!campaign){
+            return res.status(404).json({message: 'campaign not found'})
+        }
+        campaign.settings = settings;
+        const saved = await campaign.save();
+
+        if(saved){
+            res.status(200).json({message: 'saved successfully'})
+        }
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal Server error' });
+    }
+})  
 
 module.exports = {
     createCampaign,
@@ -149,5 +190,7 @@ module.exports = {
     uploadCampaignImage,
     updateCampaignState,
     getCampaignState,
-    getCampaignById
+    getCampaignById,
+    updateCampaignReward,
+    updateCampaignSettings
 };
