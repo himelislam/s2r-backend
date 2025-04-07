@@ -28,7 +28,11 @@ const RewardSchema = new mongoose.Schema({
   code: String,
   codes: [String], // Changed Array to [String] for better type definition
   amount: Number,
-  currency: String
+  currency: String,
+  method: {
+    type: String,
+    enum: ['add-later', 'bulk-import']
+  }
 });
 
 const SettingsSchema = new mongoose.Schema({
@@ -144,6 +148,7 @@ const CampaignSchema = new mongoose.Schema({
   },
   referrerJSON: String, // Simplified since not required
   refereeJSON: String, // Simplified since not required
+  emailJSON: String, // Simplified since not required
   settings: {
     type: SettingsSchema,
     default: () => ({})

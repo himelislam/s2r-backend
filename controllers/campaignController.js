@@ -126,6 +126,27 @@ const updateCampaignState = asyncHandler(async(req, res) => {
     }
 })
 
+const updateCampaignEmailState = asyncHandler(async(req, res) => {
+    const {state, campaignId} = req.body;
+
+    try {
+        const campaign  = await Campaign.findById(campaignId);
+        if(!campaign){
+            return res.status(404).json({message: 'campaign not found'})
+        }
+        campaign.emailJSON = state
+        const saved = await campaign.save();
+
+        if(saved){
+            res.status(200).json({message: 'email state saved successfully'})
+        }
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal Server error' });
+    }
+})
+
 const getCampaignState = asyncHandler(async( req, res ) => {
     const { campaignId } = req.body;
 
@@ -192,5 +213,6 @@ module.exports = {
     getCampaignState,
     getCampaignById,
     updateCampaignReward,
-    updateCampaignSettings
+    updateCampaignSettings,
+    updateCampaignEmailState
 };

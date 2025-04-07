@@ -8,7 +8,8 @@ const { createCampaign,
     getCampaignState,
     getCampaignById,
     updateCampaignReward,
-    updateCampaignSettings
+    updateCampaignSettings,
+    updateCampaignEmailState
 } = require('../controllers/campaignController')
 const { authMiddleware } = require('../middlewares/authMiddleware');
 const { upload } = require('../middlewares/multerMiddleware');
@@ -18,6 +19,7 @@ router.post('/getCampaignsByBusinessId', authMiddleware, getCampaignsByBusinessI
 router.post('/updateCampaignActiveStatus', authMiddleware, updateCampaignActiveStatus);
 router.post('/upload', upload.single('image'), uploadCampaignImage)
 router.post('/updateCampaignState', authMiddleware, updateCampaignState)
+router.post('/updateCampaignEmailState', authMiddleware, updateCampaignEmailState)
 router.post('/getCampaignState', authMiddleware, getCampaignState)
 router.post('/getCampaignById', authMiddleware, getCampaignById)
 router.post('/updateCampaignReward', authMiddleware, updateCampaignReward)
