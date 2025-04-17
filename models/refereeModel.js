@@ -32,7 +32,7 @@ const refereeSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Active'],
+        enum: ['Pending', 'Active', 'Cancel'],
         default: 'Pending'
     }
 });

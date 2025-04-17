@@ -26,7 +26,7 @@ const createReferee = asyncHandler(async (req, res) => {
             campaignId,
             referrerId,
             referrerName: referrer.name,
-            status: 'Active'
+            status: 'Pending'
         })
 
         if (referee) {
@@ -83,9 +83,30 @@ const getRefereeList = asyncHandler(async (req, res) => {
     }
 });
 
+const updateRefereeStatus = asyncHandler(async (req, res) => {
+    const { refereeId, status } = req.body;
+
+    try {
+        const referee = await Referee.findById(refereeId);
+
+        if (!referee) {
+            return res.status(404).json({ message: 'Referee not found' });
+        }
+
+        referee.status = status;
+        await referee.save();
+
+        res.status(200).json({ message: 'Status updated successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal Server error' });
+    }
+})
+
 module.exports = {
     createReferee,
     getRefereeByReferrerId,
     getRefereeByBusinessId,
-    getRefereeList
+    getRefereeList,
+    updateRefereeStatus
 };
