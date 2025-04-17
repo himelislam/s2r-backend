@@ -204,6 +204,25 @@ const updateCampaignSettings = asyncHandler(async(req, res) => {
     }
 })  
 
+
+const deleteCampaignById = asyncHandler(async (req, res) => {
+    const {campaignId} = req.body;
+
+    console.log(campaignId);
+
+    try {
+        const campaign = await Campaign.findById(campaignId);
+        if (!campaign) {
+            return res.status(404).json({ message: 'Campaign not found' });
+        }
+        await Campaign.findByIdAndDelete(campaignId);
+        res.status(200).json({ message: 'Campaign deleted successfully' });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Internal Server error' });
+    }
+})
+
 module.exports = {
     createCampaign,
     getCampaignsByBusinessId,
@@ -214,5 +233,6 @@ module.exports = {
     getCampaignById,
     updateCampaignReward,
     updateCampaignSettings,
-    updateCampaignEmailState
+    updateCampaignEmailState,
+    deleteCampaignById
 };
