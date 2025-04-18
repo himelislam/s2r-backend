@@ -61,9 +61,30 @@ const getRefereeByBusinessId = asyncHandler(async (req, res) => {
     try {
         const referees = await Referee.find({ businessId: businessId });
 
-        if (referees) {
-            res.status(201).json(referees);
+        if (!referees) {
+            return res.status(404).json({ message: "Referrer not found" });
         }
+
+        const detailedReferees = await Promise.all(
+            referees.map(async (ref) => {
+              const campaign = await Campaign.findById(ref.campaignId);
+              const referrer = await Referrer.findById(ref.referrerId);
+        
+              return {
+                ...ref.toObject(),
+                campaignName: campaign?.campaignName,
+                campaignStatus: campaign?.active,
+                referrerName: referrer?.name,
+                referrerEmail: referrer?.email,
+                qrCodeId: referrer?.qrCodeId,
+                // Add anything else you need
+              };
+            })
+          );
+
+          res.status(201).json(detailedReferees);
+
+
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal Server Error' });
@@ -111,24 +132,6 @@ const getRefereeWithCampaignDetails = asyncHandler(async (req, res) => {
         // Get referees
         const referees = await Referee.find({ businessId, status: 'Active' });
 
-        // Get all unique campaign and referrer IDs
-        const campaignIds = [...new Set(referees.map(r => r.campaignId))];
-        const referrerIds = [...new Set(referees.map(r => r.referrerId))];
-
-        // Fetch all campaigns and referrers in parallel
-        // const [campaigns, referrers] = await Promise.all([
-        //     Campaign.find({ _id: { $in: campaignIds } }),
-        //     Referrer.find({ _id: { $in: referrerIds } })
-        // ]);
-
-        // Map data to referees
-        // const result = referees.map(referee => ({
-        //     ...referee.toObject(),
-        //     campaign: campaigns.find(c => c._id.equals(referee.campaignId)),
-        //     referrer: referrers.find(r => r._id.equals(referee.referrerId))
-        // }));
-
-
         const detailedReferees = await Promise.all(
             referees.map(async (ref) => {
               const campaign = await Campaign.findById(ref.campaignId);
@@ -137,6 +140,7 @@ const getRefereeWithCampaignDetails = asyncHandler(async (req, res) => {
               return {
                 ...ref.toObject(),
                 campaignName: campaign?.campaignName,
+                campaignStatus: campaign?.active,
                 reward: campaign?.reward,
                 referrerName: referrer?.name,
                 referrerEmail: referrer?.email,
