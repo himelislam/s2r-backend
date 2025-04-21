@@ -2,6 +2,7 @@ const asyncHandler = require('express-async-handler');
 const User = require('../models/userModel')
 const Referrer = require('../models/referrerModel')
 const Business = require('../models/businessModel')
+const Campaign = require('../models/campaignModel')
 const Member = require('../models/memberModel')
 const { mailer: { client_url } } = require('../config/env')
 const QRCode = require('qrcode');
@@ -158,7 +159,24 @@ const getReferrersByBusinessId = asyncHandler(async (req, res) => {
     const { businessId } = req.body;
     try {
         const referrers = await Referrer.find({ businessId: businessId })
-        res.status(200).json(referrers)
+
+        if (!referrers) {
+            return res.status(404).json({ message: "Referrer not found" });
+        }
+
+        const detailedReferrer = await Promise.all(
+            referrers.map(async (ref) => {
+                const campaign = await Campaign.findById(ref.campaignId);
+
+                return {
+                    ...ref.toObject(),
+                    campaignName: campaign?.campaignName,
+                    campaignStatus: campaign?.active
+                };
+            })
+        );
+
+        res.status(201).json(detailedReferrer);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Internal Server Error' });
