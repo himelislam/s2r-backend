@@ -5,10 +5,10 @@ const Member = require('../models/memberModel');
 const Referrer = require('../models/referrerModel');
 const Campaign = require('../models/campaignModel')
 const QRCode = require('qrcode');
-const nodemailer = require('nodemailer');
-const { jwt: { secret }, mailer: { email, email_password, client_url } } = require('../config/env')
 const mongoose = require("mongoose");
+const { mailer: { client_url } } = require('../config/env')
 const { cloudinary } = require('../helpers/cloudinary.helper');
+const { transporter } = require('../helpers/nodemailer.helper');
 
 const createBusiness = asyncHandler(async (req, res) => {
     const { businessName, businessEmail, name, email, phone, address, userType } = req.body;
@@ -620,13 +620,13 @@ const uploadProfileImage = asyncHandler(async (req, res) => {
     }
 });
 
-const transporter = nodemailer.createTransport({
-    service: 'Gmail',
-    auth: {
-        user: email,
-        pass: email_password,
-    },
-});
+// const transporter = nodemailer.createTransport({
+//     service: 'Gmail',
+//     auth: {
+//         user: email,
+//         pass: email_password,
+//     },
+// });
 
 
 module.exports = {

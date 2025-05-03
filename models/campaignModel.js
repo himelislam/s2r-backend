@@ -31,7 +31,7 @@ const RewardSchema = new mongoose.Schema({
   currency: String,
   method: {
     type: String,
-    enum: ['add-later', 'bulk-import']
+    enum: ['add-later', 'bulk-import', 'added']
   }
 });
 
