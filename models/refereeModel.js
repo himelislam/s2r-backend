@@ -10,7 +10,7 @@ const refereeSchema = new mongoose.Schema({
         type: String,
         default: null
     },
-    phone:{
+    phone: {
         type: Number,
         default: null
     },
@@ -22,9 +22,9 @@ const refereeSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         required: true
     },
-    referrerId:{
+    referrerId: {
         type: mongoose.Schema.Types.ObjectId,
-        required:true
+        required: true
     },
     campaignId: {
         type: mongoose.Schema.Types.ObjectId,
@@ -32,8 +32,12 @@ const refereeSchema = new mongoose.Schema({
     },
     status: {
         type: String,
-        enum: ['Pending', 'Active', 'Cancel'],
+        enum: ['Pending', 'Active', 'Cancel', 'Paid'],
         default: 'Pending'
+    },
+    rewardPaidAt: {
+        type: Date,
+        required: false
     }
 });
 
