@@ -40,92 +40,113 @@ const EmailHtmlSchema = new mongoose.Schema({
   welcome: String
 })
 
-const SettingsSchema = new mongoose.Schema({
-    // Duration and Language
-    startDate: {
-      type: Date,
-      required: false
-    },
-    endDate: {
-      type: Date,
-      required: false
-    },
-    language: {
+const IntegrationSchema = new mongoose.Schema({
+  zapier: {
+    webhookUrl: {
       type: String,
-      default: "English"
+      default: null
     },
-    
-    // Domain Used For Links
-    domain: {
-      useDefaultDomain: {
-        type: Boolean,
-        default: true
-      },
-      defaultDomain: {
-        type: String,
-        default: "referral-factory.com"
-      },
-      customDomain: {
-        type: String
-      }
+    isActive: {
+      type: Boolean,
+      default: false
     },
-    
-    // Email Notifications
-    senderName: {
+    secretKey: {
+      type: String,
+      default: null
+    },
+    lastTriggeredAt: {
+      type: Date,
+      default: null
+    }
+  }
+})
+
+const SettingsSchema = new mongoose.Schema({
+  // Duration and Language
+  startDate: {
+    type: Date,
+    required: false
+  },
+  endDate: {
+    type: Date,
+    required: false
+  },
+  language: {
+    type: String,
+    default: "English"
+  },
+
+  // Domain Used For Links
+  domain: {
+    useDefaultDomain: {
+      type: Boolean,
+      default: true
+    },
+    defaultDomain: {
+      type: String,
+      default: "referral-factory.com"
+    },
+    customDomain: {
+      type: String
+    }
+  },
+
+  // Email Notifications
+  senderName: {
+    type: String
+  },
+
+  // Referral Limits
+  referralLimits: {
+    maxReferrals: {
+      type: Number,
+      default: null // null means unlimited
+    },
+    maxRewardsPerUser: {
+      type: Number,
+      default: null // null means unlimited
+    }
+  },
+
+  // Meta Information
+  meta: {
+    title: {
       type: String
     },
-    
-    // Referral Limits
-    referralLimits: {
-      maxReferrals: {
-        type: Number,
-        default: null // null means unlimited
-      },
-      maxRewardsPerUser: {
-        type: Number,
-        default: null // null means unlimited
-      }
-    },
-    
-    // Meta Information
-    meta: {
-      title: {
-        type: String
-      },
-      description: {
-        type: String
-      }
-    },
-    
-    // Campaign Status Messages
-    pausedCampaignText: {
+    description: {
+      type: String
+    }
+  },
+
+  // Campaign Status Messages
+  pausedCampaignText: {
+    type: String,
+    default: "This campaign is currently paused."
+  },
+
+  // Visual Elements
+  campaignFavicon: {
+    type: String // URL to the favicon
+  },
+
+  // Legal Documents
+  legal: {
+    termsAndConditions: {
       type: String,
-      default: "This campaign is currently paused."
+      maxlength: 50000
     },
-    
-    // Visual Elements
-    campaignFavicon: {
-      type: String // URL to the favicon
-    },
-    
-    // Legal Documents
-    legal: {
-      termsAndConditions: {
-        type: String,
-        maxlength: 50000
-      },
-      privacyPolicy: {
-        type: String,
-        maxlength: 50000
-      }
-    },
-    
-    // Any additional custom settings
-    // additionalSettings: {
-    //   type: Map,
-    //   of: Schema.Types.Mixed
-    // }
-  });
+    privacyPolicy: {
+      type: String,
+      maxlength: 50000
+    }
+  },
+
+  // Any additional custom settings
+  // additionalSettings: {
+  //   type: Map,
+  //   of: Schema.Types.Mixed
+  // }
+});
 
 // Main schema
 const CampaignSchema = new mongoose.Schema({
@@ -165,10 +186,15 @@ const CampaignSchema = new mongoose.Schema({
   reward: {
     type: RewardSchema,
     default: () => ({})
+  },
+  integrations: {
+    type: IntegrationSchema,
+    default: () => ({})
   }
-}, {
-  timestamps: true // Adds createdAt and updatedAt automatically
-});
+},
+  {
+    timestamps: true // Adds createdAt and updatedAt automatically
+  });
 
 // Adding indexes for common query fields
 CampaignSchema.index({ businessId: 1 });

@@ -14,6 +14,8 @@ const referrerRoutes = require('./routes/referrerRoutes');
 const refereeRoutes = require('./routes/refereeRoutes')
 const memberRoutes = require('./routes/memberRoutes')
 const campaignRoutes = require('./routes/campaignRoutes')
+const integrationRoutes = require('./routes/integrationRoutes')
+
 const PORT = port || 8000;
 
 
@@ -43,6 +45,7 @@ app.use('/api/referrer', referrerRoutes)
 app.use('/api/referee', refereeRoutes)
 app.use('/api/member', memberRoutes)
 app.use('/api/campaign', campaignRoutes)
+app.use('/api/integration', integrationRoutes)
 
 
 app.get("/", (req, res) => {
