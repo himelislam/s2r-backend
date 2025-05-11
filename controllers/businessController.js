@@ -620,15 +620,6 @@ const uploadProfileImage = asyncHandler(async (req, res) => {
     }
 });
 
-// const transporter = nodemailer.createTransport({
-//     service: 'Gmail',
-//     auth: {
-//         user: email,
-//         pass: email_password,
-//     },
-// });
-
-
 module.exports = {
     createBusiness,
     addReferrer,

@@ -35,6 +35,11 @@ const RewardSchema = new mongoose.Schema({
   }
 });
 
+const EmailHtmlSchema = new mongoose.Schema({
+  reward: String,
+  welcome: String
+})
+
 const SettingsSchema = new mongoose.Schema({
     // Duration and Language
     startDate: {
@@ -149,6 +154,10 @@ const CampaignSchema = new mongoose.Schema({
   referrerJSON: String, // Simplified since not required
   refereeJSON: String, // Simplified since not required
   emailJSON: String, // Simplified since not required
+  emailHtml: {
+    type: EmailHtmlSchema,
+    default: () => ({})
+  },
   settings: {
     type: SettingsSchema,
     default: () => ({})
