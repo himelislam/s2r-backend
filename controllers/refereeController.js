@@ -5,6 +5,7 @@ const Campaign = require('../models/campaignModel')
 const Business = require('../models/businessModel')
 const { mailer: { client_url } } = require('../config/env');
 const { transporter } = require('../helpers/nodemailer.helper');
+const { sendNewRefeeeJoinEmail } = require('../email-templates/sendNewRefereeJoinEmail')
 
 const createReferee = asyncHandler(async (req, res) => {
     const { name, email, phone, date, businessId, campaignId, referrerId } = req.body;
@@ -15,6 +16,7 @@ const createReferee = asyncHandler(async (req, res) => {
         }
 
         const referrer = await Referrer.findById(referrerId);
+        const business = await Business.findById(businessId)
 
         if (!referrer) {
             return res.status(404).json({ message: "Referrer not found" });
@@ -33,8 +35,16 @@ const createReferee = asyncHandler(async (req, res) => {
         })
 
         if (referee) {
-            res.status(201).json({ message: 'Sent Successfully' })
+            const mailSent = await sendNewRefeeeJoinEmail({
+                body: { businessId, campaignId, referrerId, refereeId: referee._id },
+            });
+
+            if (mailSent) {
+                res.status(201).json({ message: 'Sent Successfully' })
+            }
         }
+
+
 
     } catch (error) {
         console.error(error);
@@ -69,22 +79,22 @@ const getRefereeByBusinessId = asyncHandler(async (req, res) => {
 
         const detailedReferees = await Promise.all(
             referees.map(async (ref) => {
-              const campaign = await Campaign.findById(ref.campaignId);
-              const referrer = await Referrer.findById(ref.referrerId);
-        
-              return {
-                ...ref.toObject(),
-                campaignName: campaign?.campaignName,
-                campaignStatus: campaign?.active,
-                referrerName: referrer?.name,
-                referrerEmail: referrer?.email,
-                qrCodeId: referrer?.qrCodeId,
-                // Add anything else you need
-              };
-            })
-          );
+                const campaign = await Campaign.findById(ref.campaignId);
+                const referrer = await Referrer.findById(ref.referrerId);
 
-          res.status(201).json(detailedReferees);
+                return {
+                    ...ref.toObject(),
+                    campaignName: campaign?.campaignName,
+                    campaignStatus: campaign?.active,
+                    referrerName: referrer?.name,
+                    referrerEmail: referrer?.email,
+                    qrCodeId: referrer?.qrCodeId,
+                    // Add anything else you need
+                };
+            })
+        );
+
+        res.status(201).json(detailedReferees);
 
 
     } catch (error) {
@@ -136,21 +146,21 @@ const getRefereeWithCampaignDetails = asyncHandler(async (req, res) => {
 
         const detailedReferees = await Promise.all(
             referees.map(async (ref) => {
-              const campaign = await Campaign.findById(ref.campaignId);
-              const referrer = await Referrer.findById(ref.referrerId);
-        
-              return {
-                ...ref.toObject(),
-                campaignName: campaign?.campaignName,
-                campaignStatus: campaign?.active,
-                reward: campaign?.reward,
-                referrerName: referrer?.name,
-                referrerEmail: referrer?.email,
-                qrCodeId: referrer?.qrCodeId,
-                // Add anything else you need
-              };
+                const campaign = await Campaign.findById(ref.campaignId);
+                const referrer = await Referrer.findById(ref.referrerId);
+
+                return {
+                    ...ref.toObject(),
+                    campaignName: campaign?.campaignName,
+                    campaignStatus: campaign?.active,
+                    reward: campaign?.reward,
+                    referrerName: referrer?.name,
+                    referrerEmail: referrer?.email,
+                    qrCodeId: referrer?.qrCodeId,
+                    // Add anything else you need
+                };
             })
-          );
+        );
 
         res.json(detailedReferees);
     } catch (error) {
@@ -189,8 +199,8 @@ const sendRewardEmailToRefereer = asyncHandler(async (req, res) => {
         // 5. Parse emailJSON and replace placeholders
         let emailJSON;
         try {
-            emailJSON = typeof campaign.emailJSON === 'string' 
-                ? JSON.parse(campaign.emailJSON) 
+            emailJSON = typeof campaign.emailJSON === 'string'
+                ? JSON.parse(campaign.emailJSON)
                 : campaign.emailJSON;
         } catch (e) {
             return res.status(400).json({ message: 'Invalid email template format' });
@@ -301,10 +311,10 @@ const sendRewardEmailToRefereer = asyncHandler(async (req, res) => {
 
     } catch (error) {
         console.error('Error processing reward:', error);
-        res.status(500).json({ 
+        res.status(500).json({
             success: false,
             message: 'Failed to process reward',
-            error: error.message 
+            error: error.message
         });
     }
 });
