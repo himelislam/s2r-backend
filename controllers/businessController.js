@@ -9,6 +9,7 @@ const mongoose = require("mongoose");
 const { mailer: { client_url } } = require('../config/env')
 const { cloudinary } = require('../helpers/cloudinary.helper');
 const { transporter } = require('../helpers/nodemailer.helper');
+const { sendReferrerWelcomeEmail } = require('../emails/sendMailsToReferrer');
 
 const createBusiness = asyncHandler(async (req, res) => {
     const { businessName, businessEmail, name, email, phone, address, userType } = req.body;
@@ -448,142 +449,142 @@ const inviteReferrer = asyncHandler(async (req, res) => {
     }
 })
 
-const sendReferrerWelcomeEmail = asyncHandler(async (req, res) => {
-    const { businessId, email, name, campaignId, referrerId } = req.body;
+// const sendReferrerWelcomeEmail = asyncHandler(async (req, res) => {
+//     const { businessId, email, name, campaignId, referrerId } = req.body;
 
-    const session = await mongoose.startSession(); // Start a session
-    session.startTransaction();
+//     const session = await mongoose.startSession(); // Start a session
+//     session.startTransaction();
 
-    try {
-        const business = await Business.findById(businessId).session(session);
-        const campaign = await Campaign.findById(campaignId).session(session);
+//     try {
+//         const business = await Business.findById(businessId).session(session);
+//         const campaign = await Campaign.findById(campaignId).session(session);
 
-        if (!business || !campaign) {
-            throw new Error("Business or Campaign not found.");
-        }
+//         if (!business || !campaign) {
+//             throw new Error("Business or Campaign not found.");
+//         }
 
-        // Proper way to find the QR code
-        const qrCode = business.qrCodes.find(qr => qr.referrerId?.toString() === referrerId.toString());
+//         // Proper way to find the QR code
+//         const qrCode = business.qrCodes.find(qr => qr.referrerId?.toString() === referrerId.toString());
 
-        if (!qrCode) {
-            throw new Error("QR Code not found for the given referrer.");
-        }
+//         if (!qrCode) {
+//             throw new Error("QR Code not found for the given referrer.");
+//         }
 
-        const refereeListURL = `${client_url}/referee-list/${referrerId}`;
-        const signupURL = `${client_url}/referrer-setup-pass/${businessId}/${referrerId}/${email}`;
+//         const refereeListURL = `${client_url}/referee-list/${referrerId}`;
+//         const signupURL = `${client_url}/referrer-setup-pass/${businessId}/${referrerId}/${email}`;
 
-        const sent = await transporter.sendMail({
-            to: email,
-            subject: `Joined on campaign from ${business?.name}`,
-            html: `<!DOCTYPE html>
-                    <html>
-                    <head>
-                        <meta charset="UTF-8">
-                        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-                        <title>Account Created Successfully</title>
-                        <style>
-                            body {
-                                font-family: Arial, sans-serif;
-                                background-color: #f9f9f9;
-                                margin: 0;
-                                padding: 0;
-                                color: #333;
-                            }
-                            .container {
-                                max-width: 600px;
-                                margin: 30px auto;
-                                background: #ffffff;
-                                padding: 20px;
-                                border: 1px solid #dddddd;
-                                border-radius: 5px;
-                            }
-                            .header {
-                                text-align: center;
-                                padding: 10px 0;
-                            }
-                            .header img {
-                                max-width: 150px;
-                            }
-                            .content {
-                                margin: 20px 0;
-                                text-align: center;
-                            }
-                            .content h1 {
-                                color: #444;
-                                font-size: 24px;
-                            }
-                            .content p {
-                                font-size: 16px;
-                                margin-bottom: 20px;
-                                color: #666;
-                            }
-                            .button-container {
-                                text-align: center;
-                                margin: 20px 0;
-                            }
-                            .button {
-                                background-color: #007BFF;
-                                color: white !important;
-                                padding: 10px 20px;
-                                text-decoration: none;
-                                border-radius: 5px;
-                                font-size: 16px;
-                            }
-                            .footer {
-                                text-align: center;
-                                margin-top: 20px;
-                                font-size: 12px;
-                                color: #999;
-                            }
-                        </style>
-                    </head>
-                    <body>
-                        <div class="container">
-                            <div class="header">
-                                <img src="https://t3.ftcdn.net/jpg/05/16/27/60/360_F_516276029_aMcP4HU81RVrYX8f5qCAOCCuOiCsu5UF.jpg" alt="Attach N' Hatch Logo">
-                            </div>
-                            <div class="content">
-                                <h1>You have successfully joined as a referrer on ${campaign?.campaignName}</h1>
-                                <p>${business?.name} has invited you to join a referrer</p>
-                                <p>To sign up on the dashboard; please click the link below to set the password:</p>
-                                <div class="button-container">
-                                    <a href="${signupURL}" class="button">Sign Up</a>
-                                </div>
+//         const sent = await transporter.sendMail({
+//             to: email,
+//             subject: `Joined on campaign from ${business?.name}`,
+//             html: `<!DOCTYPE html>
+//                     <html>
+//                     <head>
+//                         <meta charset="UTF-8">
+//                         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+//                         <title>Account Created Successfully</title>
+//                         <style>
+//                             body {
+//                                 font-family: Arial, sans-serif;
+//                                 background-color: #f9f9f9;
+//                                 margin: 0;
+//                                 padding: 0;
+//                                 color: #333;
+//                             }
+//                             .container {
+//                                 max-width: 600px;
+//                                 margin: 30px auto;
+//                                 background: #ffffff;
+//                                 padding: 20px;
+//                                 border: 1px solid #dddddd;
+//                                 border-radius: 5px;
+//                             }
+//                             .header {
+//                                 text-align: center;
+//                                 padding: 10px 0;
+//                             }
+//                             .header img {
+//                                 max-width: 150px;
+//                             }
+//                             .content {
+//                                 margin: 20px 0;
+//                                 text-align: center;
+//                             }
+//                             .content h1 {
+//                                 color: #444;
+//                                 font-size: 24px;
+//                             }
+//                             .content p {
+//                                 font-size: 16px;
+//                                 margin-bottom: 20px;
+//                                 color: #666;
+//                             }
+//                             .button-container {
+//                                 text-align: center;
+//                                 margin: 20px 0;
+//                             }
+//                             .button {
+//                                 background-color: #007BFF;
+//                                 color: white !important;
+//                                 padding: 10px 20px;
+//                                 text-decoration: none;
+//                                 border-radius: 5px;
+//                                 font-size: 16px;
+//                             }
+//                             .footer {
+//                                 text-align: center;
+//                                 margin-top: 20px;
+//                                 font-size: 12px;
+//                                 color: #999;
+//                             }
+//                         </style>
+//                     </head>
+//                     <body>
+//                         <div class="container">
+//                             <div class="header">
+//                                 <img src="https://t3.ftcdn.net/jpg/05/16/27/60/360_F_516276029_aMcP4HU81RVrYX8f5qCAOCCuOiCsu5UF.jpg" alt="Attach N' Hatch Logo">
+//                             </div>
+//                             <div class="content">
+//                                 <h1>You have successfully joined as a referrer on ${campaign?.campaignName}</h1>
+//                                 <p>${business?.name} has invited you to join a referrer</p>
+//                                 <p>To sign up on the dashboard; please click the link below to set the password:</p>
+//                                 <div class="button-container">
+//                                     <a href="${signupURL}" class="button">Sign Up</a>
+//                                 </div>
 
-                                <div class="content">
-                                    <p>Here is your QR code for the campaign:</p>
-                                    <img src="${qrCode?.qrCodeBase64}" alt="QR Code" />
-                                </div>
+//                                 <div class="content">
+//                                     <p>Here is your QR code for the campaign:</p>
+//                                     <img src="${qrCode?.qrCodeBase64}" alt="QR Code" />
+//                                 </div>
 
-                                <p>You can check out the referee list from the link below:</p>
-                                <div class="button-container">
-                                    <a href="${refereeListURL}" class="button">Sign Up</a>
-                                </div>
+//                                 <p>You can check out the referee list from the link below:</p>
+//                                 <div class="button-container">
+//                                     <a href="${refereeListURL}" class="button">Sign Up</a>
+//                                 </div>
                                 
-                                <p>If you have any questions, feel free to contact our support team.</p>
-                            </div>
-                            <div class="footer">
-                                <p>&copy; ${new Date().getFullYear()} Attach N' Hatch. All rights reserved.</p>
-                            </div>
-                        </div>
-                    </body>
-                    </html>`
-        });
+//                                 <p>If you have any questions, feel free to contact our support team.</p>
+//                             </div>
+//                             <div class="footer">
+//                                 <p>&copy; ${new Date().getFullYear()} Attach N' Hatch. All rights reserved.</p>
+//                             </div>
+//                         </div>
+//                     </body>
+//                     </html>`
+//         });
 
-        if (sent) {
-            await session.commitTransaction(); // Commit transaction
-            session.endSession(); // End session after committing
-            // return res.status(200).json({ message: 'Invitation mail sent successfully' });
-            return true;
-        }
+//         if (sent) {
+//             await session.commitTransaction(); // Commit transaction
+//             session.endSession(); // End session after committing
+//             // return res.status(200).json({ message: 'Invitation mail sent successfully' });
+//             return true;
+//         }
 
-        throw new Error("Failed to send email.");
-    } catch (error) {
-        session.endSession();
-        console.error("Failed to send invitation mail", error);
-        return false
-    }
-});
+//         throw new Error("Failed to send email.");
+//     } catch (error) {
+//         session.endSession();
+//         console.error("Failed to send invitation mail", error);
+//         return false
+//     }
+// });
 
 
 const uploadProfileImage = asyncHandler(async (req, res) => {
