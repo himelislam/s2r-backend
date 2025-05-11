@@ -127,7 +127,7 @@ const updateCampaignState = asyncHandler(async(req, res) => {
 })
 
 const updateCampaignEmailState = asyncHandler(async(req, res) => {
-    const {state, campaignId} = req.body;
+    const {state, html, campaignId} = req.body;
 
     try {
         const campaign  = await Campaign.findById(campaignId);
@@ -135,6 +135,7 @@ const updateCampaignEmailState = asyncHandler(async(req, res) => {
             return res.status(404).json({message: 'campaign not found'})
         }
         campaign.emailJSON = state
+        campaign.emailHtml = html
         const saved = await campaign.save();
 
         if(saved){
