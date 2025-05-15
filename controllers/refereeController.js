@@ -5,7 +5,8 @@ const Campaign = require('../models/campaignModel')
 const Business = require('../models/businessModel')
 const { mailer: { client_url } } = require('../config/env');
 const { transporter } = require('../helpers/nodemailer.helper');
-const { sendNewRefeeeJoinEmail } = require('../email-templates/sendNewRefereeJoinEmail')
+const { sendNewRefeeeJoinEmail } = require('../emails/sendMailsToReferrer');
+const { triggerIntegrations } = require('../service/integrationService');
 
 const createReferee = asyncHandler(async (req, res) => {
     const { name, email, phone, date, businessId, campaignId, referrerId } = req.body;
@@ -16,7 +17,6 @@ const createReferee = asyncHandler(async (req, res) => {
         }
 
         const referrer = await Referrer.findById(referrerId);
-        const business = await Business.findById(businessId)
 
         if (!referrer) {
             return res.status(404).json({ message: "Referrer not found" });
@@ -39,7 +39,19 @@ const createReferee = asyncHandler(async (req, res) => {
                 body: { businessId, campaignId, referrerId, refereeId: referee._id },
             });
 
-            if (mailSent) {
+            const integrationData = {
+                email: email,
+                name: name,
+                phone: phone,
+                date: date,
+                created_at: new Date().toISOString()
+            };
+
+            const integrationResults = await triggerIntegrations(campaignId, integrationData);
+
+            console.log('Integration results:', integrationResults);
+
+            if (mailSent && integrationResults) {
                 res.status(201).json({ message: 'Sent Successfully' })
             }
         }
