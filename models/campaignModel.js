@@ -52,12 +52,34 @@ const IntegrationSchema = new mongoose.Schema({
     },
     secretKey: {
       type: String,
-      default: null
+      default: null,
+      // select: false
     },
     lastTriggeredAt: {
       type: Date,
       default: null
     }
+  },
+  pabbly: {
+    webhookUrl: String,
+    isActive: Boolean,
+    headers: mongoose.Schema.Types.Mixed, // For custom headers
+    lastTriggeredAt: Date
+  },
+  customApi: {
+    endpoint: String,
+    isActive: Boolean,
+    method: { type: String, enum: ['GET', 'POST', 'PUT'], default: 'POST' },
+    headers: mongoose.Schema.Types.Mixed,
+    bodyTemplate: String, // Optional template for request body
+    lastTriggeredAt: Date
+  },
+  webhook: {
+    url: String,
+    isActive: Boolean,
+    method: { type: String, enum: ['GET', 'POST', 'PUT'], default: 'POST' },
+    headers: mongoose.Schema.Types.Mixed,
+    lastTriggeredAt: Date
   }
 })
 

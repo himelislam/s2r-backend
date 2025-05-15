@@ -136,6 +136,8 @@ const testZapierURL = asyncHandler(async (req, res) => {
             error: "Failed to test Zapier integration",
             details: error.message 
         });
+
+        console.error(error);
     }
 });
 
