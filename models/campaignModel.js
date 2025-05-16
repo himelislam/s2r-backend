@@ -71,6 +71,17 @@ const IntegrationSchema = new mongoose.Schema({
     },
     lastTriggeredAt: Date
   },
+  make: {
+    webhookUrl: String,
+    isActive: Boolean,
+    headers: mongoose.Schema.Types.Mixed, // For custom headers
+    secretKey: {
+      type: String,
+      default: null,
+      // select: false
+    },
+    lastTriggeredAt: Date
+  },
   customApi: {
     endpoint: String,
     isActive: Boolean,
