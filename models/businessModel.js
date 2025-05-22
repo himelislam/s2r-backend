@@ -1,4 +1,5 @@
 const mongoose = require("mongoose");
+require('./subscription')
 
 const qrCodeSchema = new mongoose.Schema({
     id: {
@@ -9,7 +10,7 @@ const qrCodeSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         default: null
     },
-    referrerName:{
+    referrerName: {
         type: String,
         default: null
     },
@@ -36,7 +37,7 @@ const qrCodeSchema = new mongoose.Schema({
     }
 });
 
-const businessSchema =  new mongoose.Schema({
+const businessSchema = new mongoose.Schema({
     businessName: {
         type: String,
         required: true
@@ -67,7 +68,21 @@ const businessSchema =  new mongoose.Schema({
     qrCodes: {
         type: [qrCodeSchema],
         default: [],
-    }
+    },
+    subscription: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Subscription'
+    },
+    stripeCustomerId: String,
+    trialEnd: {
+        type: Date,
+        default: function () {
+            // 14-day free trial
+            const trialPeriod = new Date();
+            trialPeriod.setDate(trialPeriod.getDate() + 14);
+            return trialPeriod;
+        }
+    },
 })
 
 module.exports = mongoose.model("business", businessSchema);
