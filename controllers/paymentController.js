@@ -42,24 +42,35 @@ exports.handleSuccess = async (req, res) => {
 };
 
 exports.getBusinessSubscription = async (req, res) => {
-    const { businessId } = req.body;
+  const { businessId } = req.body;
   try {
-    const business = await Business.findById(businessId).populate('subscription');
+    const business = await Business.findById(businessId).populate({
+      path: 'subscription',
+      populate: { path: 'plan' } // Populate the plan inside subscription
+    });
+
     if (!business) {
       return res.status(404).json({ error: 'Business not found' });
     }
 
-    let subscription = business.subscription;
-    if (!subscription && new Date() < new Date(business.trialEnd)) {
-      // Return trial information
-      subscription = {
-        status: 'trialing',
-        plan: { name: 'trial', type: 'trial' },
-        currentPeriodEnd: business.trialEnd
-      };
+    // If subscription exists (even if trial is active), return it
+    if (business.subscription) {
+      return res.json({ subscription: business.subscription });
     }
 
-    res.json({ subscription });
+    // If no subscription but trial is active, return trial data
+    if (new Date() < new Date(business.trialEnd)) {
+      return res.json({
+        subscription: {
+          status: 'trialing',
+          plan: { name: 'trial', type: 'trial' },
+          currentPeriodEnd: business.trialEnd
+        }
+      });
+    }
+
+    // If no subscription and trial expired, return null (or free plan data)
+    res.json({ subscription: null });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }

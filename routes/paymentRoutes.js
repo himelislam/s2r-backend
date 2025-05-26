@@ -19,7 +19,7 @@ router.get('/plans', paymentController.getPlans);
 router.post('/create-checkout-session', paymentController.createCheckoutSession);
 
 // Handle successful payment
-router.get('/success', paymentController.handleSuccess);
+router.post('/success', paymentController.handleSuccess);
 
 // Get business subscription status
 router.post('/subscription', paymentController.getBusinessSubscription);

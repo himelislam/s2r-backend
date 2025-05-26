@@ -51,127 +51,84 @@ class StripeService {
       }
     ];
 
-    // // Create or update plans in Stripe and our database
-    // for (const planData of plans) {
-    //   let stripeProduct;
-      
-    //   // Check if product exists
-    //   const products = await stripe.products.search({
-    //     query: `name:"${planData.name}" AND active:'true'`
-    //   });
-
-    //   if (products.data.length === 0) {
-    //     stripeProduct = await stripe.products.create({
-    //       name: `${planData.name.charAt(0).toUpperCase() + planData.name.slice(1)} Plan`,
-    //       description: planData.features.join(', ')
-    //     });
-    //   } else {
-    //     stripeProduct = products.data[0];
-    //   }
-
-    //   // Create price
-    //   const stripePrice = await stripe.prices.create({
-    //     product: stripeProduct.id,
-    //     unit_amount: planData.price,
-    //     currency: 'usd',
-    //     recurring: planData.type !== 'lifetime' ? {
-    //       interval: planData.type === 'yearly' ? 'year' : 'month'
-    //     } : undefined
-    //   });
-
-    //   // Upsert plan in database
-    //   await Plan.findOneAndUpdate(
-    //     { name: planData.name, type: planData.type },
-    //     {
-    //       ...planData,
-    //       stripePriceId: stripePrice.id,
-    //       isActive: true
-    //     },
-    //     { upsert: true, new: true }
-    //   );
-    // }
-
-    // console.log('Stripe plans initialized successfully');
-
-
     // Create or update plans in Stripe and our database
-  for (const planData of plans) {
-    // Check if we already have this plan in our database
-    const existingPlan = await Plan.findOne({ 
-      name: planData.name, 
-      type: planData.type 
-    });
+    for (const planData of plans) {
+      // Check if we already have this plan in our database
+      const existingPlan = await Plan.findOne({
+        name: planData.name,
+        type: planData.type
+      });
 
-    // If plan exists in DB, check if price changed
-    if (existingPlan) {
-      // Get the Stripe price to compare
-      try {
-        const stripePrice = await stripe.prices.retrieve(existingPlan.stripePriceId);
-        
-        // If price hasn't changed, skip updating
-        if (stripePrice.unit_amount === planData.price) {
-          continue;
+      // If plan exists in DB, check if price changed
+      if (existingPlan) {
+        // Get the Stripe price to compare
+        try {
+          const stripePrice = await stripe.prices.retrieve(existingPlan.stripePriceId);
+
+          // If price hasn't changed, skip updating
+          if (stripePrice.unit_amount === planData.price) {
+            continue;
+          }
+
+          // Price changed - create new price and deactivate old one
+          await stripe.prices.update(existingPlan.stripePriceId, {
+            active: false
+          });
+        } catch (err) {
+          // Price might have been deleted in Stripe, we'll create new one
+          console.log(`Price ${existingPlan.stripePriceId} not found, creating new`);
         }
-        
-        // Price changed - create new price and deactivate old one
-        await stripe.prices.update(existingPlan.stripePriceId, {
-          active: false
-        });
-      } catch (err) {
-        // Price might have been deleted in Stripe, we'll create new one
-        console.log(`Price ${existingPlan.stripePriceId} not found, creating new`);
       }
-    }
 
-    // Find or create product in Stripe
-    let stripeProduct;
-    const products = await stripe.products.search({
-      query: `name:"${planData.name}" AND active:'true'`
-    });
+      // Find or create product in Stripe
+      let stripeProduct;
+      const products = await stripe.products.search({
+        query: `name:"${planData.name}" AND active:'true'`
+      });
 
-    if (products.data.length > 0) {
-      stripeProduct = products.data[0];
-    } else {
-      stripeProduct = await stripe.products.create({
-        name: `${planData.name.charAt(0).toUpperCase() + planData.name.slice(1)} Plan`,
-        description: planData.features.join(', '),
+      if (products.data.length > 0) {
+        stripeProduct = products.data[0];
+      } else {
+        stripeProduct = await stripe.products.create({
+          name: `${planData.name.charAt(0).toUpperCase() + planData.name.slice(1)} Plan`,
+          description: planData.features.join(', '),
+          metadata: {
+            planName: planData.name,
+            planType: planData.type
+          }
+        });
+      }
+
+      // Create new price
+      const stripePrice = await stripe.prices.create({
+        product: stripeProduct.id,
+        unit_amount: planData.price,
+        currency: 'usd',
+        recurring: planData.type !== 'lifetime' ? {
+          interval: planData.type === 'yearly' ? 'year' : 'month'
+        } : undefined,
         metadata: {
           planName: planData.name,
           planType: planData.type
         }
       });
+
+      // Upsert plan in database
+      await Plan.findOneAndUpdate(
+        { name: planData.name, type: planData.type },
+        {
+          ...planData,
+          stripePriceId: stripePrice.id,
+          isActive: true
+        },
+        { upsert: true, new: true }
+      );
     }
 
-    // Create new price
-    const stripePrice = await stripe.prices.create({
-      product: stripeProduct.id,
-      unit_amount: planData.price,
-      currency: 'usd',
-      recurring: planData.type !== 'lifetime' ? {
-        interval: planData.type === 'yearly' ? 'year' : 'month'
-      } : undefined,
-      metadata: {
-        planName: planData.name,
-        planType: planData.type
-      }
-    });
-
-    // Upsert plan in database
-    await Plan.findOneAndUpdate(
-      { name: planData.name, type: planData.type },
-      {
-        ...planData,
-        stripePriceId: stripePrice.id,
-        isActive: true
-      },
-      { upsert: true, new: true }
-    );
+    console.log('Stripe plans initialized/verified successfully');
   }
 
-  console.log('Stripe plans initialized/verified successfully');
-  }
 
-  // Create checkout session
   static async createCheckoutSession(businessId, planId, successUrl, cancelUrl) {
     const business = await Business.findById(businessId);
     const plan = await Plan.findById(planId);
@@ -195,7 +152,7 @@ class StripeService {
       await business.save();
     }
 
-    const session = await stripe.checkout.sessions.create({
+    const sessionParams = {
       customer: customerId,
       payment_method_types: ['card'],
       line_items: [{
@@ -207,138 +164,108 @@ class StripeService {
       cancel_url: cancelUrl,
       metadata: {
         businessId: business._id.toString(),
-        planId: plan._id.toString()
-      },
-      subscription_data: plan.type !== 'lifetime' ? {
-        trial_period_days: 14 // 14-day free trial
-      } : undefined
-    });
+        planId: plan._id.toString(),
+        planType: plan.type // Add plan type to metadata
+      }
+    };
 
+    // For subscriptions (not one-time payments)
+    if (plan.type !== 'lifetime') {
+      sessionParams.subscription_data = {
+        trial_period_days: 14, // 14-day free trial
+        metadata: {
+          businessId: business._id.toString(),
+          planId: plan._id.toString()
+        }
+      };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionParams);
     return session;
   }
 
-  // Handle successful payment
-  // static async handleSuccessfulPayment(sessionId) {
-  //   const session = await stripe.checkout.sessions.retrieve(sessionId, {
-  //     expand: ['subscription', 'customer']
-  //   });
-
-  //   const business = await Business.findById(session.metadata.businessId);
-  //   const plan = await Plan.findById(session.metadata.planId);
-
-  //   if (!business || !plan) {
-  //     throw new Error('Business or plan not found');
-  //   }
-
-  //   // For subscriptions
-  //   if (session.subscription) {
-  //     const subscription = await Subscription.create({
-  //       business: business._id,
-  //       plan: plan._id,
-  //       status: session.subscription.status,
-  //       stripeSubscriptionId: session.subscription.id,
-  //       currentPeriodStart: new Date(session.subscription.current_period_start * 1000),
-  //       currentPeriodEnd: new Date(session.subscription.current_period_end * 1000)
-  //     });
-
-  //     business.subscription = subscription._id;
-  //     await business.save();
-  //   }
-  //   // For one-time payments (LTD)
-  //   else if (session.payment_status === 'paid') {
-  //     const subscription = await Subscription.create({
-  //       business: business._id,
-  //       plan: plan._id,
-  //       status: 'active',
-  //       stripeSubscriptionId: `one-time-${session.id}`,
-  //       currentPeriodStart: new Date(),
-  //       currentPeriodEnd: new Date('2100-01-01') // Far future date for LTD
-  //     });
-
-  //     business.subscription = subscription._id;
-  //     await business.save();
-  //   }
-
-  //   return { business, plan };
-  // }
-
 
   static async handleSuccessfulPayment(sessionId) {
-  try {
-    // Retrieve the Stripe session with expanded subscription and customer data
-    const session = await stripe.checkout.sessions.retrieve(sessionId, {
-      expand: ['subscription', 'customer']
-    });
+    try {
+      const session = await stripe.checkout.sessions.retrieve(sessionId, {
+        expand: ['subscription', 'customer']
+      });
 
-    // Validate required metadata
-    if (!session.metadata || !session.metadata.businessId || !session.metadata.planId) {
-      throw new Error('Missing required metadata in session');
-    }
-
-    const business = await Business.findById(session.metadata.businessId);
-    const plan = await Plan.findById(session.metadata.planId);
-
-    if (!business) throw new Error('Business not found');
-    if (!plan) throw new Error('Plan not found');
-
-    let subscriptionData = {
-      business: business._id,
-      plan: plan._id,
-      status: 'active',
-      stripeSubscriptionId: `one-time-${session.id}`,
-      currentPeriodStart: new Date(),
-      currentPeriodEnd: new Date('2100-01-01') // Far future date for LTD
-    };
-
-    // Handle subscription payments
-    if (session.subscription) {
-      // Retrieve full subscription details from Stripe
-      const subscription = await stripe.subscriptions.retrieve(session.subscription.id);
-      
-      // Validate subscription period dates
-      if (!subscription.current_period_start || !subscription.current_period_end) {
-        throw new Error('Subscription period dates are missing');
+      // Validate metadata
+      if (!session.metadata?.businessId || !session.metadata?.planId) {
+        throw new Error("Missing businessId or planId in session metadata");
       }
 
-      subscriptionData = {
-        business: business._id,
-        plan: plan._id,
-        status: subscription.status,
-        stripeSubscriptionId: subscription.id,
-        currentPeriodStart: new Date(subscription.current_period_start * 1000),
-        currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-        cancelAtPeriodEnd: subscription.cancel_at_period_end || false
+      const business = await Business.findById(session.metadata.businessId);
+      const plan = await Plan.findById(session.metadata.planId);
+
+      if (!business || !plan) {
+        throw new Error('Business or plan not found');
+      }
+
+      let subscription;
+
+      // For subscriptions (monthly/yearly)
+      if (session.subscription) {
+        const stripeSubscription = await stripe.subscriptions.retrieve(session.subscription.id);
+
+        const currentPeriodStart = stripeSubscription.current_period_start
+          ? new Date(stripeSubscription.current_period_start * 1000)
+          : new Date();
+
+        const currentPeriodEnd = stripeSubscription.current_period_end
+          ? new Date(stripeSubscription.current_period_end * 1000)
+          : new Date(new Date().setFullYear(new Date().getFullYear() + 1)); // Default: 1 year later
+
+        subscription = await Subscription.create({
+          business: business._id,
+          plan: plan._id,
+          status: stripeSubscription.status,
+          stripeSubscriptionId: stripeSubscription.id,
+          currentPeriodStart,
+          currentPeriodEnd,
+          cancelAtPeriodEnd: stripeSubscription.cancel_at_period_end || false
+        });
+
+        business.subscription = subscription._id;
+        await business.save();
+      }
+      // For one-time payments (LTD)
+      else if (session.payment_status === 'paid') {
+        subscription = await Subscription.create({
+          business: business._id,
+          plan: plan._id,
+          status: 'active',
+          stripeSubscriptionId: `one-time-${session.id}`,
+          currentPeriodStart: new Date(),
+          currentPeriodEnd: new Date('2100-01-01') // Far future for LTD
+        });
+
+        business.subscription = subscription._id;
+        await business.save();
+      }
+
+      // Populate subscription with plan before returning
+      const updatedBusiness = await Business.findById(business._id)
+        .populate({
+          path: 'subscription',
+          populate: { path: 'plan' }
+        });
+
+      return {
+        // subscription: updatedBusiness.subscription,
+        // plan
+
+        subscription: {
+          ...updatedBusiness.subscription.toObject(), // Convert Mongoose doc to plain object
+          plan: plan // Include the full plan details
+        }
       };
-
-      // Additional validation for date objects
-      if (isNaN(subscriptionData.currentPeriodStart.getTime()) || 
-          isNaN(subscriptionData.currentPeriodEnd.getTime())) {
-        throw new Error('Invalid subscription period dates');
-      }
+    } catch (error) {
+      console.error("Error in handleSuccessfulPayment:", error);
+      throw error;
     }
-
-    // Create or update subscription
-    const subscription = await Subscription.findOneAndUpdate(
-      { business: business._id },
-      subscriptionData,
-      { upsert: true, new: true, runValidators: true }
-    );
-
-    // Update business with subscription reference
-    business.subscription = subscription._id;
-    await business.save();
-
-    return { 
-      business,
-      subscription,
-      plan 
-    };
-
-  } catch (error) {
-    console.error('Error in handleSuccessfulPayment:', error);
-    throw error; // Re-throw for controller to handle
   }
-}
 }
 
 module.exports = StripeService;
