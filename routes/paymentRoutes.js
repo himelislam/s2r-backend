@@ -21,6 +21,8 @@ router.post('/create-checkout-session', paymentController.createCheckoutSession)
 // Handle successful payment
 router.post('/success', paymentController.handleSuccess);
 
+router.post('/cancel-subscription', paymentController.cancelSubscription)
+
 // Get business subscription status
 router.post('/subscription', paymentController.getBusinessSubscription);
 
