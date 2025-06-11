@@ -2,6 +2,7 @@ const express = require("express");
 const session = require("express-session");
 const cors = require("cors");
 const app = express();
+const MongoStore = require('connect-mongo');
 require("dotenv").config();
 const { connectToDatabase } = require("./config/db");
 const { errorHandler } = require("./middlewares/errorMiddleware");
