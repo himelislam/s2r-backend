@@ -63,12 +63,28 @@ app.get("/", (req, res) => {
 app.use(errorHandler);
 
 // Connect to the database before start the server
-connectToDatabase().then(() => {
-  app.listen(PORT, err => {
-    if (err) {
-      console.error(err);
-      return process.exit(1);
-    }
-    console.info(`\n#########################################################\n          Server listening on port: ${PORT} \n#########################################################\n`, "Starting server");
+// connectToDatabase().then(() => {
+//   app.listen(PORT, err => {
+//     if (err) {
+//       console.error(err);
+//       return process.exit(1);
+//     }
+//     console.info(`\n#########################################################\n          Server listening on port: ${PORT} \n#########################################################\n`, "Starting server");
+//   });
+// });
+
+if (require.main === module) {
+  // Running as a standalone server (for local development)
+  connectToDatabase().then(() => {
+    app.listen(PORT, err => {
+      if (err) {
+        console.error(err);
+        return process.exit(1);
+      }
+      console.info(`\n#########################################################\n          Server listening on port: ${PORT} \n#########################################################\n`, "Starting server");
+    });
   });
-});
+} else {
+  // Running as a module (for Vercel serverless functions)
+  module.exports = app;
+}
