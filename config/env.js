@@ -12,7 +12,8 @@ module.exports = {
         user: process.env.MONGO_USER || "user",
         password: process.env.MONGO_PASSWORD || "password",
         uri: process.env.MONGO_URI ||
-            `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@s2r-cluster01.qj1lz.mongodb.net/?retryWrites=true&w=majority&appName=S2R-Cluster01`
+            `mongodb+srv://${process.env.MONGO_USER}:${process.env.MONGO_PASSWORD}@s2r-cluster01.qj1lz.mongodb.net/?retryWrites=true&w=majority&appName=S2R-Cluster01`,
+        sesstion_secret: process.env.MONGO_SESSION_SECRET
     },
     mailer: {
         email: process.env.EMAIL,

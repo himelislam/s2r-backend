@@ -75,3 +75,13 @@ exports.getBusinessSubscription = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+exports.cancelSubscription = async (req, res) => {
+  try {
+    const { businessId, cancelAtPeriodEnd } = req.body;
+    const result = await StripeService.cancelSubscription( businessId, cancelAtPeriodEnd);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};

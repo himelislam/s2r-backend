@@ -6,7 +6,8 @@ require("dotenv").config();
 const { connectToDatabase } = require("./config/db");
 const { errorHandler } = require("./middlewares/errorMiddleware");
 const {
-  app: { port, cors_origin }
+  app: { port, cors_origin },
+  mongo: {sesstion_secret, uri}
 } = require("./config/env")
 const authRoutes = require('./routes/authRoutes')
 const businessRoutes = require('./routes/businessRoutes');
@@ -22,9 +23,13 @@ const PORT = port || 8000;
 
 app.use(
   session({
-    secret: "this is my session secret",
+    secret: sesstion_secret || "this-is-a-secret-key-change-me",
     resave: false,
     saveUninitialized: false,
+    store: MongoStore.create({
+      mongoUrl: uri,
+      ttl: 14 * 24 * 60 * 60 // = 14 days. Default
+    })
   })
 );
 

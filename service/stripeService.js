@@ -170,15 +170,15 @@ class StripeService {
     };
 
     // For subscriptions (not one-time payments)
-    if (plan.type !== 'lifetime') {
-      sessionParams.subscription_data = {
-        trial_period_days: 14, // 14-day free trial
-        metadata: {
-          businessId: business._id.toString(),
-          planId: plan._id.toString()
-        }
-      };
-    }
+    // if (plan.type !== 'lifetime') {
+    //   sessionParams.subscription_data = {
+    //     trial_period_days: 14, // 14-day free trial
+    //     metadata: {
+    //       businessId: business._id.toString(),
+    //       planId: plan._id.toString()
+    //     }
+    //   };
+    // }
 
     const session = await stripe.checkout.sessions.create(sessionParams);
     return session;
@@ -265,6 +265,99 @@ class StripeService {
       console.error("Error in handleSuccessfulPayment:", error);
       throw error;
     }
+  }
+
+
+
+  // cancel subscription
+
+  static async cancelSubscription(businessId, cancelAtPeriodEnd = true) {
+    try {
+      // 1. Get the business with subscription
+      const business = await Business.findById(businessId)
+        .populate({
+          path: 'subscription',
+          populate: { path: 'plan' }
+        });
+
+      if (!business) {
+        throw new Error('Business not found');
+      }
+
+      if (!business.subscription) {
+        throw new Error('No active subscription found');
+      }
+
+      const { subscription } = business;
+
+      // 2. Handle different subscription types
+      if (subscription.plan.type === 'lifetime') {
+        // Lifetime plans can't be canceled in Stripe (one-time payment)
+        // Just mark as canceled in our system
+        subscription.status = 'canceled';
+        await subscription.save();
+        return {
+          message: 'Lifetime plan canceled (access will continue until period end)',
+          subscription: await subscription.populate('plan')
+        };
+      }
+
+      // 3. Handle Stripe subscription cancellation
+      if (!subscription.stripeSubscriptionId) {
+        throw new Error('Missing Stripe subscription ID');
+      }
+
+      // 4. Update subscription in Stripe
+      const updatedStripeSubscription = await stripe.subscriptions.update(
+        subscription.stripeSubscriptionId,
+        {
+          cancel_at_period_end: cancelAtPeriodEnd,
+          metadata: {
+            ...subscription.metadata,
+            canceledBy: 'user',
+            canceledAt: new Date().toISOString()
+          }
+        }
+      );
+
+      // 5. Update our local subscription record
+      subscription.status = updatedStripeSubscription.status;
+      subscription.cancelAtPeriodEnd = updatedStripeSubscription.cancel_at_period_end;
+      // subscription.currentPeriodEnd = new Date(updatedStripeSubscription.current_period_end * 1000);
+
+      if (!this.getValidDate(subscription.currentPeriodEnd)) {
+        subscription.currentPeriodEnd = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+      }
+
+      await subscription.save();
+
+      // 6. If immediate cancellation requested (not at period end)
+      if (!cancelAtPeriodEnd) {
+        await stripe.subscriptions.cancel(subscription.stripeSubscriptionId);
+        subscription.status = 'canceled';
+        await subscription.save();
+      }
+
+      // 7. Return updated subscription
+      return {
+        message: cancelAtPeriodEnd
+          ? 'Subscription will cancel at period end'
+          : 'Subscription canceled immediately',
+        subscription: await Subscription.findById(subscription._id).populate('plan')
+      };
+    } catch (error) {
+      console.error('Error canceling subscription:', error);
+      throw new Error(`Failed to cancel subscription: ${error.message}`);
+    }
+  }
+
+
+
+  // Helper method to validate dates
+  static getValidDate(date) {
+    if (!date) return null;
+    const d = new Date(date);
+    return isNaN(d.getTime()) ? null : d;
   }
 }
 
