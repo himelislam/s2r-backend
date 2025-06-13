@@ -6,8 +6,9 @@ const StripeService = require('../service/stripeService');
 const connectToDatabase = async () => {
   try {
     const db = await mongoose.connect(uri, {
-      // useNewUrlParser: true,
-      // useUnifiedTopology: true,
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000
     })
     console.log(`MongoDB Connected: ${db.connection.host}`);
 
