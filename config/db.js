@@ -33,22 +33,22 @@ const Config = require('../models/configModel');
 const connectToDatabase = async () => {
   try {
     const db = await mongoose.connect(uri, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000,
+      // useNewUrlParser: true,
+      // useUnifiedTopology: true,
+      // serverSelectionTimeoutMS: 5000,
     });
     console.log(`MongoDB Connected: ${db.connection.host}`);
 
-    const initialized = await Config.findOne({ key: 'stripe_initialized' });
+    // const initialized = await Config.findOne({ key: 'stripe_initialized' });
 
-    if (!initialized) {
-      await StripeService.initializePlans();
-      console.log('Stripe plans initialized successfully');
+    // if (!initialized) {
+    //   await StripeService.initializePlans();
+    //   console.log('Stripe plans initialized successfully');
 
-      await Config.create({ key: 'stripe_initialized', value: true });
-    } else {
-      console.log('Stripe plans already initialized, skipping...');
-    }
+    //   await Config.create({ key: 'stripe_initialized', value: true });
+    // } else {
+    //   console.log('Stripe plans already initialized, skipping...');
+    // }
 
   } catch (error) {
     console.error(`Error connecting to database: ${error.message}`);
