@@ -359,6 +359,16 @@ class StripeService {
     const d = new Date(date);
     return isNaN(d.getTime()) ? null : d;
   }
+
+  static async getAllPlans() {
+  try {
+    const plans = await Plan.find({ isActive: true });
+    return plans;
+  } catch (error) {
+    console.error("Error fetching plans from DB:", error);
+    throw new Error("Unable to fetch plans");
+  }
+}
 }
 
 module.exports = StripeService;
