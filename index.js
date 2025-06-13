@@ -8,7 +8,7 @@ const { connectToDatabase } = require("./config/db");
 const { errorHandler } = require("./middlewares/errorMiddleware");
 const {
   app: { port, cors_origin },
-  mongo: {sesstion_secret, uri}
+  mongo: {session_secret, uri}
 } = require("./config/env")
 const authRoutes = require('./routes/authRoutes')
 const businessRoutes = require('./routes/businessRoutes');
@@ -24,7 +24,7 @@ const PORT = port || 8000;
 
 app.use(
   session({
-    secret: sesstion_secret || "this-is-a-secret-key-change-me",
+    secret: session_secret || "this-is-a-secret-key-change-me",
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
