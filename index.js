@@ -19,6 +19,7 @@ const campaignRoutes = require('./routes/campaignRoutes')
 const integrationRoutes = require('./routes/integrationRoutes')
 const paymentRoutes = require('./routes/paymentRoutes');
 const healthRoutes = require('./routes/healthRoutes');
+const initializePlanRoutes = require('./routes/initializePlanRoutes')
 
 const PORT = port || 8000;
 
@@ -69,6 +70,7 @@ app.use('/api/campaign', campaignRoutes)
 app.use('/api/integration', integrationRoutes)
 app.use('/api/payment', paymentRoutes )
 app.use('/api/health', healthRoutes)
+app.use('/api/initialize', initializePlanRoutes)
 
 
 app.get("/", (req, res) => {
