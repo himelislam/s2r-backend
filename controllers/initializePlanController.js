@@ -3,6 +3,7 @@ const Config = require('../models/configModel');
 const StripeService = require('../service/stripeService');
 const { ApiError } = require('../utils/ApiError');
 const { ensureConnection } = require('../config/db');
+const mongoose = require("mongoose");
 
 const initializePlans = expressAsyncHandler(async (req, res) => {
 
