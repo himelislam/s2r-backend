@@ -23,14 +23,27 @@ const healthRoutes = require('./routes/healthRoutes');
 const PORT = port || 8000;
 
 
+// app.use(
+//   session({
+//     secret: session_secret || "this-is-a-secret-key-change-me",
+//     resave: false,
+//     saveUninitialized: false,
+//     store: MongoStore.create({
+//       mongoUrl: uri,
+//       ttl: 14 * 24 * 60 * 60 // = 14 days. Default
+//     })
+//   })
+// );
+
 app.use(
   session({
     secret: session_secret || "this-is-a-secret-key-change-me",
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-      mongoUrl: uri,
-      ttl: 14 * 24 * 60 * 60 // = 14 days. Default
+      clientPromise: connectToDatabase().then(m => m.connection.getClient()),
+      dbName: 'test', // specify your database name
+      ttl: 14 * 24 * 60 * 60
     })
   })
 );
