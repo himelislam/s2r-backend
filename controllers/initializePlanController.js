@@ -1,7 +1,7 @@
 const expressAsyncHandler = require('express-async-handler');
 const Config = require('../models/configModel');
 const StripeService = require('../service/stripeService');
-const { ApiError } = require('../utils/ApiError');
+// const { ApiError } = require('../utils/ApiError');
 const { ensureConnection } = require('../config/db');
 const mongoose = require("mongoose");
 
@@ -21,7 +21,8 @@ const initializePlans = expressAsyncHandler(async (req, res) => {
   );
 
   if (!config.isNew) {
-    throw new ApiError(400, 'Stripe plans already initialized');
+    // throw new ApiError(400, 'Stripe plans already initialized');
+    res.status(500).json({ message: 'Stripe plans already initialized' });
   }
 
   // Initialize plans
