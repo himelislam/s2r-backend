@@ -19,9 +19,22 @@ const campaignRoutes = require('./routes/campaignRoutes')
 const integrationRoutes = require('./routes/integrationRoutes')
 const paymentRoutes = require('./routes/paymentRoutes');
 const healthRoutes = require('./routes/healthRoutes');
+const initializePlanRoutes = require('./routes/initializePlanRoutes')
 
 const PORT = port || 8000;
 
+
+// app.use(
+//   session({
+//     secret: session_secret || "this-is-a-secret-key-change-me",
+//     resave: false,
+//     saveUninitialized: false,
+//     store: MongoStore.create({
+//       mongoUrl: uri,
+//       ttl: 14 * 24 * 60 * 60 // = 14 days. Default
+//     })
+//   })
+// );
 
 app.use(
   session({
@@ -29,8 +42,9 @@ app.use(
     resave: false,
     saveUninitialized: false,
     store: MongoStore.create({
-      mongoUrl: uri,
-      ttl: 14 * 24 * 60 * 60 // = 14 days. Default
+      clientPromise: connectToDatabase().then(m => m.connection.getClient()),
+      dbName: 'test', // specify your database name
+      ttl: 14 * 24 * 60 * 60
     })
   })
 );
@@ -56,6 +70,7 @@ app.use('/api/campaign', campaignRoutes)
 app.use('/api/integration', integrationRoutes)
 app.use('/api/payment', paymentRoutes )
 app.use('/api/health', healthRoutes)
+app.use('/api/initialize', initializePlanRoutes)
 
 
 app.get("/", (req, res) => {
