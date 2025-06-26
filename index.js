@@ -56,6 +56,10 @@ var cors_options = {
   optionsSuccessStatus: 200,
 };
 
+
+const rateLimit = require('express-rate-limit');
+app.use('/api/', rateLimit({ windowMs: 15*60*1000, max: 100 }));
+
 app.use(cors(cors_options));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
