@@ -50,11 +50,15 @@ app.use(
 );
 
 // Cors options
-var cors_options = {
+const cors_options = {
   // origin: cors_origin ? cors_origin : "*",
   origin: "*",
   optionsSuccessStatus: 200,
 };
+
+
+const rateLimit = require('express-rate-limit');
+app.use('/api/', rateLimit({ windowMs: 15*60*1000, max: 100 }));
 
 app.use(cors(cors_options));
 app.use(express.json());
