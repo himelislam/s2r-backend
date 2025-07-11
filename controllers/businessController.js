@@ -1,6 +1,7 @@
 const asyncHandler = require('express-async-handler');
 const User = require('../models/userModel')
 const Business = require('../models/businessModel')
+const Onboarding = require('../models/onboardingModel');
 const Member = require('../models/memberModel');
 const Referrer = require('../models/referrerModel');
 const Campaign = require('../models/campaignModel')
@@ -483,6 +484,62 @@ const uploadProfileImage = asyncHandler(async (req, res) => {
     }
 });
 
+
+const createOnboardingData = asyncHandler(async (req, res) => {
+  try {
+    const { businessType, hearAboutUs, role, additionalInfo, businessId } = req.body;
+    
+    // Validate required fields
+    if (!businessType || !hearAboutUs || !role) {
+      return res.status(400).json({ 
+        error: 'Please provide all required fields: businessType, hearAboutUs, role' 
+      });
+    }
+
+    // Get the business associated with the user
+    const business = await Business.findById(businessId);
+    if (!business) {
+      return res.status(404).json({ error: 'Business not found' });
+    }
+
+    // Create onboarding data
+    const onboardingData = await Onboarding.create({
+      businessType,
+      hearAboutUs,
+      role,
+      additionalInfo: additionalInfo || '',
+      business: business._id,
+      metadata: {
+        ipAddress: req.ip,
+        userAgent: req.headers['user-agent']
+      }
+    });
+
+    res.status(201).json({
+      success: true,
+      data: onboardingData,
+      message: 'Onboarding data submitted successfully'
+    });
+
+  } catch (error) {
+    console.error('Error creating onboarding data:', error);
+    
+    // Handle validation errors specifically
+    if (error.name === 'ValidationError') {
+      const messages = Object.values(error.errors).map(val => val.message);
+      return res.status(400).json({
+        error: 'Validation error',
+        details: messages
+      });
+    }
+
+    res.status(500).json({ 
+      error: 'Server error occurred while saving onboarding data' 
+    });
+  }
+});
+
+
 module.exports = {
     createBusiness,
     addReferrer,
@@ -492,5 +549,6 @@ module.exports = {
     inviteReferrer,
     updateProfile,
     updateBusinessProfile,
-    uploadProfileImage
+    uploadProfileImage,
+    createOnboardingData
 };
