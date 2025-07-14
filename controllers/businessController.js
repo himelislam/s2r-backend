@@ -490,11 +490,11 @@ const createOnboardingData = asyncHandler(async (req, res) => {
     const { businessType, hearAboutUs, role, additionalInfo, businessId } = req.body;
     
     // Validate required fields
-    if (!businessType || !hearAboutUs || !role) {
-      return res.status(400).json({ 
-        error: 'Please provide all required fields: businessType, hearAboutUs, role' 
-      });
-    }
+    // if (!businessType || !hearAboutUs || !role) {
+    //   return res.status(400).json({ 
+    //     error: 'Please provide all required fields: businessType, hearAboutUs, role' 
+    //   });
+    // }
 
     // Get the business associated with the user
     const business = await Business.findById(businessId);
